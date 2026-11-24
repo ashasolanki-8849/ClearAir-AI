@@ -1,7 +1,15 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import dns from 'dns';
 
 dotenv.config();
+
+// Ensure standard DNS servers (Google & Cloudflare) for MongoDB SRV record resolution
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch (e) {
+  // ignore if network environment restricts custom DNS
+}
 
 let isConnected = false;
 let memoryServerInstance: any = null;
