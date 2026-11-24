@@ -129,14 +129,15 @@ export const RoadmapPage = () => {
     },
     {
       id: 10,
-      title: 'Module 10: What-if Pollution Simulator',
-      status: 'upcoming',
-      badge: 'UPCOMING',
+      title: 'Module 10: What-if Air Pollution Simulator',
+      status: 'active',
+      badge: 'LIVE & ACTIVE',
       icon: Sliders,
       description:
-        'Interactive scenario simulator allowing users and policymakers to test policy levers: "What if 30% of vehicles go electric?", "What if stubble fires decrease by 50%?".',
+        'Interactive scenario simulator with 10 physics-informed policy levers (vehicle cuts, EV transition, metro usage, HEPA air cleaners, urban forestry, dust suppression, industrial abatement, waste burning bans, inversion activity shift). Features real-time 3-state scenario comparison, personal pulmonary dose avoidance, community scale projections, and Gemini AI scenario analysis.',
       architecture:
-        'Client-side dispersion physics simulation using WebAssembly or Monte Carlo models.',
+        'PollutionSimulation MongoDB model, CPCB/TERI/IIT-K empirical source-apportionment dispersion physics engine, Gemini AI Scenario Advisor with deterministic fallback, preset library & 4-tier recommendation engine.',
+      route: '/simulator',
     },
   ];
 
@@ -165,20 +166,18 @@ export const RoadmapPage = () => {
             <Card
               key={m.id}
               id={`module-${m.id}`}
-              className={`p-6 transition-all ${
-                isActive
-                  ? 'border-emerald-500/80 bg-emerald-500/5 shadow-md'
-                  : 'hover:border-zinc-300 dark:hover:border-zinc-700'
-              }`}
+              className={`p-6 transition-all ${isActive
+                ? 'border-emerald-500/80 bg-emerald-500/5 shadow-md'
+                : 'hover:border-zinc-300 dark:hover:border-zinc-700'
+                }`}
             >
               <div className="flex items-start justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-900">
                 <div className="flex items-center gap-3">
                   <div
-                    className={`p-2.5 rounded-xl ${
-                      isActive
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400'
-                    }`}
+                    className={`p-2.5 rounded-xl ${isActive
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400'
+                      }`}
                   >
                     <Icon className="w-5 h-5" />
                   </div>
@@ -187,7 +186,7 @@ export const RoadmapPage = () => {
                       {m.title}
                     </h3>
                     <span className="text-[10px] font-mono text-zinc-400">
-                      Module Phase 0{m.id}
+                      Module Phase {m.id < 10 ? `0${m.id}` : m.id}
                     </span>
                   </div>
                 </div>
@@ -212,7 +211,7 @@ export const RoadmapPage = () => {
                   <div className="pt-2">
                     <Link to={m.route}>
                       <button className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
-                        <span>Explore Module 1 Dashboard</span>
+                        <span>Explore Module {m.id}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </Link>

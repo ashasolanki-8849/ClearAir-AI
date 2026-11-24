@@ -342,6 +342,56 @@ ClearAir AI is a full-stack web application designed for families, students, wor
 
 ---
 
+### 🧪 Module 10: What-if Air Pollution Simulator
+- **Interactive Policy Levers & Multi-Sector Simulation Controls (`/simulator`)**:
+  - **Vehicular Transport (0–80%)**: Simulates vehicle usage reduction, staggered driving restrictions, and carpooling corridors.
+  - **Public Transit & Metro Surge (0–80%)**: Models modal shift from private ICE cars to electric mass transit and metro rail networks.
+  - **Electric Vehicle (EV) Transition (0–60%)**: Simulates fleet decarbonization and elimination of tailpipe criteria emissions.
+  - **Indoor HEPA Air Purification (0–2,000 Households)**: Calculates household exposure mitigation and particulate filtration.
+  - **Urban Tree Canopy (0–15,000 Trees)**: Evaluates mature broadleaf particulate dry deposition using empirical i-Tree urban airshed capture rates.
+  - **Construction & Road Dust Suppression (0–80%)**: Models misting cannons, mechanical sweeping, and perimeter curtains cutting coarse $\text{PM}_{10}$ and $\text{PM}_{2.5}$.
+  - **Industrial Emission Abatement (0–60%)**: Simulates point-source stack scrubbers, industrial zone transitions, and DG set bans.
+  - **Open Waste Burning Ban (0–100%)**: Models strict municipal enforcement against biomass, leaf litter, and plastic smoldering in courtyards.
+  - **Peak Hour Inversion Avoidance (0–100%)**: Models diurnal exercise activity shifting away from severe morning thermal inversion windows (06:00–09:30).
+  - **Society Group Carpooling (0–1,000 Households)**: Aggregates residential commuter clustering to cut daily vehicular vehicle-kilometers traveled.
+- **Physics-Informed Dispersion & Source-Apportionment Engine**:
+  - Grounded in official **CPCB / IIT-Kanpur / TERI** metropolitan source apportionment weights (28% transport, 14% dust, 18% waste burning, 16% industry, 24% regional background mass).
+  - Atmospheric urban box dispersion model accounting for diurnal planetary boundary layer (PBL) mixing heights and wind velocity.
+  - Indian CPCB NAAQS sub-index piecewise linear calculations for both $\text{PM}_{2.5}$ and $\text{PM}_{10}$, ensuring rigorous fidelity to official Indian air quality categories.
+- **3-State Real-Time Scenario Comparison**:
+  - **Current Situation**: Baseline measured environmental telemetry from ground monitoring stations.
+  - **Simulated Situation**: Dynamic outcome calculated in real-time from active policy slider levers.
+  - **Recommended Situation**: Scientifically balanced system target benchmark across all municipal sectors.
+  - Strict metric breakdown: Ambient AQI, category, $\text{PM}_{2.5}$, $\text{PM}_{10}$, avoided tailpipe $\text{CO}_2\text{e}$, tailpipe $\text{PM}_{2.5}$ eliminated, and personal pulmonary dose saved.
+- **Micro-Environment Personal Pulmonary Dose Modeling**:
+  - Calculates commuter and household lung deposition based on minute ventilation rates ($0.85\text{ m}^3/\text{h}$ resting, $1.2\text{ m}^3/\text{h}$ active commute).
+  - Quantifies direct milligrams of toxic particulate matter avoided by shifting outdoor activities during diurnal smog inversion peaks.
+- **Pre-Configured Policy Presets**:
+  - *Clean Commute & Metro Surge* (Transport Shift)
+  - *Society Zero-Burn & Group Carpool* (Residential RWAs)
+  - *Winter Smog Inversion Protection* (Health & Activity Timing)
+  - *Citywide Dust Suppression & Industrial Abatement* (Municipal Infrastructure)
+  - *Comprehensive Clean Air Transformation* (Gold Standard Citywide Transformation)
+- **4-Tier Structured Recommendation Engine**:
+  - *Best Achievable*: Ambitious multi-stakeholder target cutting up to 55% fine particulates.
+  - *Most Practical*: High ROI actions leveraging existing metro and carpool networks without new capital infrastructure.
+  - *Lowest Effort*: Immediate 24-hour wins for housing societies (leaf composting, zero night open fires).
+  - *Highest Health Benefit*: Direct respiratory protection for children and asthmatics via indoor filtration and diurnal activity shifting.
+- **Community-Level Scale Aggregation**:
+  - Projects collective impact across housing societies (RWAs), school campuses, university estates, corporate tech parks, and municipal wards.
+  - Visualizes daily, weekly, and monthly projections of total kilograms of $\text{CO}_2\text{e}$ and grams of particulate matter prevented.
+- **AI-Powered Scenario Analysis & Explanations**:
+  - Structured scientific synthesis powered by **Google Gemini API** with zero-downtime deterministic scientific rule fallback.
+  - Provides concise explanations: *What Changes, Why Pollution Changes (physical dispersion mechanisms), Pollutants Affected, Who Benefits, Limitations, Practical Actions, Community Participation*, and *Confidence Level*.
+- **Scenario Persistence & Side-by-Side Comparison**:
+  - Save, rename, organize, reload, and delete custom scenarios in MongoDB.
+  - Side-by-side comparison modal evaluating up to 4 scenarios simultaneously.
+- **Strict Scientific Transparency & Disclaimers**:
+  - Clear notices emphasizing that hypothetical simulations model potential outcomes and must never be interpreted as real-time continuous station measurements.
+  - Clarifies that while local actions mitigate breathing-zone exposure, regional transboundary background pollution remains governed by broad airshed dynamics.
+
+---
+
 ## 🏛️ Platform Architecture Roadmap (Modules 1–10)
 
 | Module | Title | Status |
@@ -355,7 +405,7 @@ ClearAir AI is a full-stack web application designed for families, students, wor
 | **Module 7** | **Sustainable Living Advisor** | **LIVE & ACTIVE** |
 | **Module 8** | **Community & Society Intelligence Platform** | **LIVE & ACTIVE** |
 | **Module 9** | **Environmental Impact Tracker & Intelligence** | **LIVE & ACTIVE** |
-| Module 10 | What-if Pollution Simulator | Upcoming |
+| **Module 10** | **What-if Air Pollution Simulator** | **LIVE & ACTIVE** |
 
 ---
 
@@ -385,6 +435,40 @@ ClearAir AI is a full-stack web application designed for families, students, wor
 ---
 
 ## 📡 REST API Reference
+
+### Module 10: What-if Air Pollution Simulator
+- `GET /api/simulator/baseline?lat=...&lon=...&city=...` — Live baseline environmental telemetry and planetary boundary layer mixing depth
+- `POST /api/simulator/calculate` — Physics-informed dispersion and source-apportionment simulation across 10 policy levers
+- `GET /api/simulator/presets` — Pre-configured policy presets (Clean Commute, Society Zero-Burn, Inversion Shield, Dust Abatement, Gold Standard)
+- `GET /api/simulator/recommendations?baselineAqi=...&city=...` — 4-tier structured policy recommendation pathways (Best Achievable, Most Practical, Lowest Effort, Highest Health Benefit)
+- `POST /api/simulator/ai-analysis` — Google Gemini AI scenario analysis and explanation with deterministic scientific rule fallback
+- `POST /api/simulator/scenarios` — Save custom simulation scenario to user profile in MongoDB
+- `GET /api/simulator/scenarios` — Retrieve user's saved simulation scenarios
+- `GET /api/simulator/scenarios/:id` — Get single saved scenario details
+- `PATCH /api/simulator/scenarios/:id` — Update / rename saved scenario metadata
+- `DELETE /api/simulator/scenarios/:id` — Delete saved scenario
+- `POST /api/simulator/compare` — Compare up to 4 scenarios side-by-side with delta analysis
+
+### Module 9: Environmental Impact Tracker & Intelligence
+- `GET /api/impact/dashboard` — Complete environmental impact overview with CEA v19 disaggregation
+- `GET /api/impact/emission-factors` — Official emission factor registry (CEA, CPCB, IPCC, DMRC)
+- `POST /api/impact/calculate/transport` — Tailpipe carbon and criteria pollutants calculator
+- `POST /api/impact/calculate/energy` — CEA grid electricity carbon calculator
+- `POST /api/impact/calculate/waste` — Methane and criteria emissions from waste management
+- `POST /api/impact/calculate/household-fuel` — LPG / PNG / biomass combustion emissions
+- `POST /api/impact/activities` — Log daily verified environmental activity
+- `GET /api/impact/activities` — Retrieve logged environmental activities with pagination
+- `DELETE /api/impact/activities/:id` — Delete logged activity and recalculate totals
+- `GET /api/impact/goals` — List personal environmental reduction targets with progress
+- `POST /api/impact/goals` — Create reduction goal with target date
+- `PATCH /api/impact/goals/:id` — Update reduction goal status and progress
+- `DELETE /api/impact/goals/:id` — Delete reduction goal
+- `GET /api/impact/compare` — Period-over-period comparative environmental audit
+- `GET /api/impact/household` — Household aggregate footprint without double counting
+- `GET /api/impact/insights` — Dynamic rule-based audit insights
+- `POST /api/impact/advisor` — Conversational AI Environmental Impact Co-Pilot
+- `GET /api/impact/reports/generate` — Generate auditable environmental summary report
+- `GET /api/impact/export/csv` — Export RFC-4180 compliant CSV ledger
 
 ### Module 8: Community & Society Intelligence Platform
 - `GET /api/communities` — Search & list communities by city, type, or privacy

@@ -13,6 +13,7 @@ import { ForecastPage } from './pages/ForecastPage';
 import { SustainabilityPage } from './pages/SustainabilityPage';
 import { CommunityPage } from './pages/CommunityPage';
 import { ImpactPage } from './pages/ImpactPage';
+import { SimulatorPage } from './pages/SimulatorPage';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ForgotPassword } from './pages/ForgotPassword';
@@ -32,6 +33,7 @@ export const App = () => {
       <Route path="/sustainability" element={<SustainabilityPage />} />
       <Route path="/community" element={<CommunityPage />} />
       <Route path="/impact" element={<ImpactPage />} />
+      <Route path="/simulator" element={<SimulatorPage />} />
       <Route path="/pollutants" element={<PollutantsDetail />} />
       <Route path="/alerts" element={<AlertsPage />} />
       <Route path="/locations" element={<SavedLocationsPage />} />

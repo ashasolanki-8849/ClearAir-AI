@@ -18,6 +18,7 @@ import forecastRoutes from './routes/forecastRoutes.js';
 import sustainabilityRoutes from './routes/sustainabilityRoutes.js';
 import { communityRouter, pollutionReportRouter } from './routes/communityRoutes.js';
 import impactRouter from './routes/impactRoutes.js';
+import simulationRouter from './routes/simulationRoutes.js';
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ app.use('/api/sustainability', sustainabilityRoutes);
 app.use('/api/communities', communityRouter);
 app.use('/api/community-reports', pollutionReportRouter);
 app.use('/api/impact', impactRouter);
+app.use('/api/simulator', simulationRouter);
 
 // Error Handling Middleware
 app.use(errorHandler);

@@ -1897,3 +1897,194 @@ export type FamilyFootprintSummary = FamilyImpactSummaryData;
 export type CommunityImpactSummary = CommunityImpactProgressData;
 export type ImpactAdvisorResponse = ImpactAIAdvisorData;
 
+// ==========================================
+// MODULE 10: WHAT-IF POLLUTION SIMULATOR
+// ==========================================
+
+export type SimulationScenarioType =
+  | 'transport_shift'
+  | 'indoor_purification'
+  | 'urban_greening'
+  | 'dust_control'
+  | 'waste_burning_ban'
+  | 'peak_hour_avoidance'
+  | 'carpooling_society'
+  | 'community_wide'
+  | 'custom_multivariate';
+
+export interface SimulationParametersData {
+  vehicleReductionPct: number;             // 0 - 100%
+  publicTransitAdoptionPct: number;        // 0 - 100%
+  evAdoptionPct: number;                   // 0 - 100%
+  householdsIndoorPurifiedCount: number;   // 0 - 10000 households
+  treesPlantedCount: number;               // 0 - 50000 trees
+  constructionDustMitigationPct: number;   // 0 - 100%
+  industrialEmissionReductionPct: number;  // 0 - 100%
+  wasteBurningBanCompliancePct: number;    // 0 - 100%
+  peakHourOutdoorAvoidancePct: number;     // 0 - 100%
+  carpoolingHouseholdsCount: number;       // 0 - 5000 households
+}
+
+export interface SimulationBaselineData {
+  city: string;
+  stationName?: string;
+  coordinates: {
+    lat: number;
+    lon: number;
+  };
+  currentAqi: number;
+  currentPm25: number;
+  currentPm10: number;
+  currentNo2?: number;
+  currentSo2?: number;
+  currentCo?: number;
+  temperature: number;
+  humidity: number;
+  windSpeed: number;
+  pblHeightMeters?: number;
+  timestamp: string;
+}
+
+export interface SimulationResultsData {
+  simulatedAqi: number;
+  simulatedPm25: number;
+  simulatedPm10: number;
+  aqiChange: number;
+  pm25ReductionPct: number;
+  pm10ReductionPct: number;
+  tailpipeEmissionsAvoidedKgCO2e: number;
+  tailpipePm25AvoidedGrams: number;
+  personalInhaledDoseAvoidedGrams: number;
+  communityImpact: {
+    totalHouseholdParticipants: number;
+    dailyEmissionsSavedKgCO2e: number;
+    annualizedParticulateInterceptionKg: number;
+  };
+  comparison: {
+    current: {
+      aqi: number;
+      pm25: number;
+      pm10: number;
+      category: string;
+      personalRisk: string;
+    };
+    simulated: {
+      aqi: number;
+      pm25: number;
+      pm10: number;
+      category: string;
+      personalRisk: string;
+    };
+    recommended: {
+      aqi: number;
+      pm25: number;
+      pm10: number;
+      category: string;
+      personalRisk: string;
+    };
+  };
+  projections: {
+    daily: {
+      pm25Avg: number;
+      aqiAvg: number;
+    };
+    weekly: {
+      cumulativeAvoidedKgCO2e: number;
+      cumulativePm25Grams: number;
+    };
+    monthly: {
+      cumulativeAvoidedKgCO2e: number;
+      cumulativePm25Grams: number;
+    };
+  };
+}
+
+export interface SimulationAIAnalysisData {
+  whatChanges: string;
+  whyPollutionChanges: string;
+  pollutantsAffected: string[];
+  whoBenefits: string;
+  limitations: string[];
+  practicalActions: string[];
+  communityParticipation: string;
+  confidenceLevel: 'High' | 'Medium' | 'Indicative';
+}
+
+export interface ScenarioPresetData {
+  id: string;
+  name: string;
+  scenarioType: SimulationScenarioType;
+  description: string;
+  badge: string;
+  difficulty: 'Easy' | 'Moderate' | 'Ambitious';
+  parameters: SimulationParametersData;
+}
+
+export interface ScenarioRecommendationsData {
+  bestAchievable: {
+    title: string;
+    subtitle: string;
+    levers: string[];
+    estimatedAqiReduction: number;
+    effortLevel: string;
+    whySuggested: string;
+  };
+  mostPractical: {
+    title: string;
+    subtitle: string;
+    levers: string[];
+    estimatedAqiReduction: number;
+    effortLevel: string;
+    whySuggested: string;
+  };
+  lowestEffort: {
+    title: string;
+    subtitle: string;
+    levers: string[];
+    estimatedAqiReduction: number;
+    effortLevel: string;
+    whySuggested: string;
+  };
+  highestHealthBenefit: {
+    title: string;
+    subtitle: string;
+    levers: string[];
+    estimatedAqiReduction: number;
+    effortLevel: string;
+    whySuggested: string;
+  };
+}
+
+export interface SavedScenarioData {
+  _id: string;
+  userId?: string;
+  name: string;
+  scenarioType: SimulationScenarioType;
+  description?: string;
+  parameters: SimulationParametersData;
+  baselineData: SimulationBaselineData;
+  results: SimulationResultsData;
+  scientificAssumptions: string[];
+  aiAnalysis?: SimulationAIAnalysisData;
+  isSaved: boolean;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ScenarioComparisonItem {
+  id: string;
+  name: string;
+  scenarioType: SimulationScenarioType;
+  parameters: SimulationParametersData;
+  simulatedAqi: number;
+  aqiChange: number;
+  pm25ReductionPct: number;
+  pm10ReductionPct: number;
+  tailpipeEmissionsAvoidedKgCO2e: number;
+  personalInhaledDoseAvoidedGrams: number;
+  communityParticipants: number;
+  confidenceLevel: string;
+}
+
+

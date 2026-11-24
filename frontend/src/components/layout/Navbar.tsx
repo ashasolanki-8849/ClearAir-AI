@@ -291,6 +291,13 @@ export const Navbar = ({ onOpenLocationModal }: NavbarProps) => {
               Environmental Impact
             </Link>
             <Link
+              to="/simulator"
+              onClick={() => setMobileMenuOpen(false)}
+              className="rounded-lg px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-emerald-600 dark:text-emerald-400 font-medium"
+            >
+              What-if Simulator
+            </Link>
+            <Link
               to="/pollutants"
               onClick={() => setMobileMenuOpen(false)}
               className="rounded-lg px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900"
@@ -316,7 +323,7 @@ export const Navbar = ({ onOpenLocationModal }: NavbarProps) => {
               onClick={() => setMobileMenuOpen(false)}
               className="rounded-lg px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-emerald-600 dark:text-emerald-400 font-medium"
             >
-              Future Modules (2–10)
+              Platform Roadmap (Modules 1–10)
             </Link>
           </nav>
         </div>
