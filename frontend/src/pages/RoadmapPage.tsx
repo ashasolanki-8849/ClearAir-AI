@@ -105,14 +105,15 @@ export const RoadmapPage = () => {
     },
     {
       id: 8,
-      title: 'Module 8: Community and Society Features',
-      status: 'upcoming',
-      badge: 'UPCOMING',
+      title: 'Module 8: Community and Society Intelligence Platform',
+      status: 'active',
+      badge: 'LIVE & ACTIVE',
       icon: Users,
       description:
-        'Citizen-science reporting for open trash burning, illegal industrial emissions, neighborhood air sensor sharing, and local clean-air community forums.',
+        'Neighborhood pollution hotspot map, verifiable citizen incident reporting, residential society (RWA) and school smog protocols, collective green campaigns, transparent activity leaderboard, and Community AI Advisor.',
       architecture:
-        'Crowdsourced reporting endpoints, photo uploads, geo-tagging, and community leaderboards.',
+        'Community, CommunityMember, PollutionReport, CommunityEvent, CommunityCampaign, CommunityPost, CommunityNotification & CommunityAuditLog MongoDB models, Leaflet ground-truth hotspot engine, and Gemini Community Advisor.',
+      route: '/community',
     },
     {
       id: 9,

@@ -277,6 +277,13 @@ export const Navbar = ({ onOpenLocationModal }: NavbarProps) => {
               Sustainable Advisor
             </Link>
             <Link
+              to="/community"
+              onClick={() => setMobileMenuOpen(false)}
+              className="rounded-lg px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-emerald-600 dark:text-emerald-400 font-medium"
+            >
+              Community & Society
+            </Link>
+            <Link
               to="/pollutants"
               onClick={() => setMobileMenuOpen(false)}
               className="rounded-lg px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900"

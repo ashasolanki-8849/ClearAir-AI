@@ -5,7 +5,8 @@
 > **Module 4: Indoor Air Quality Intelligence & Guide (ACTIVE)**  
 > **Module 5: Low-Emission Travel Planner & Smart Route Advisor (ACTIVE)**  
 > **Module 6: Pollution Forecast & AI Prediction Engine (ACTIVE)**  
-> **Module 7: Sustainable Living Advisor & Green Lifestyle Intelligence (ACTIVE)**
+> **Module 7: Sustainable Living Advisor & Green Lifestyle Intelligence (ACTIVE)**  
+> **Module 8: Community & Society Intelligence Platform (ACTIVE)**
 
 ClearAir AI is a full-stack web application designed for families, students, working professionals, elderly citizens, and communities to understand severe winter smog and urban air pollution, monitor real-time particulates, and make safer daily health decisions.
 
@@ -261,10 +262,48 @@ ClearAir AI is a full-stack web application designed for families, students, wor
   - Interactive day completion toggle, streak counter, and Green Habit Champion badge.
 - **Family & Community Sustainability**:
   - Shared household goals with progress bars, assigned members, and target completion dates.
-  - Apartment society initiatives tracking wet-waste composting drives and e-waste collection camps (preparing Module 8).
+  - Apartment society initiatives tracking wet-waste composting drives and e-waste collection camps.
 - **Before-and-After Lifestyle Comparison**:
   - Compares previous high-carbon habits against sustainable replacements across Transportation, Energy, Waste, and Shopping.
   - Quantifies potential monthly $\text{CO}_2\text{e}$ avoidance and financial savings with scientific explanations and transparent disclaimers.
+
+---
+
+### 👥 Module 8: Community & Society Intelligence Platform
+- **Community Hub Creation & Joining (`/community`)**:
+  - Multi-tier community types: *Residential Apartment Societies (RWAs), School Campuses, College & University Campuses, Workplace / Corporate Parks, Environmental Citizen Groups, and Neighborhood Communities*.
+  - Flexible privacy configurations: *Public* (open discovery), *Private* (admin review), and *Invite-Only* (alphanumeric secure join code e.g. `CLR-XXXXX`).
+  - Role-based governance: **Owner**, **Admin**, **Moderator**, and **Member** permissions.
+- **Hyper-Local Community Air Quality & Automatic Alerts**:
+  - Ground-truth monitoring using verified coordinates via Open-Meteo & Copernicus CAMS.
+  - Full 6-pollutant concentration matrix ($\text{PM}_{2.5}$, $\text{PM}_{10}$, $\text{NO}_2$, $\text{SO}_2$, $\text{CO}$, $\text{O}_3$), atmospheric inversion indicators, and explicit data station labeling.
+  - Automatic critical smog alert broadcast when ambient AQI crosses community thresholds ($\ge 300$).
+- **Citizen Pollution Incident Reporting**:
+  - Grounded reporting categories: *Open Garbage/Plastic/Leaf Burning, Uncovered Construction Dust, Unpaved Road Dust, Heavy Commercial Vehicle Smoke, Industrial Plumes, and Open Waste Dumps*.
+  - Identity privacy protection with voluntary one-click anonymous submission.
+  - End-to-end moderation lifecycle tracking: $\text{Submitted} \rightarrow \text{Under Review} \rightarrow \text{Verified} \rightarrow \text{In Progress} \rightarrow \text{Resolved} \text{ / } \text{Rejected}$.
+- **Neighbourhood Pollution Hotspot Map**:
+  - Real coordinate mapping using Leaflet with custom category and severity markers.
+  - Interactive incident drawer with corroboration upvotes and moderation status.
+  - Strict scientific transparency: displays verified coordinates only; artificial spatial heatmaps are not simulated.
+- **Community Green Activities & Verifiable Campaigns**:
+  - **Upcoming Events**: RSVP registration for park cleanup drives, tree canopy misting, e-waste camps, and smog safety workshops with capacity management.
+  - **Collective Campaigns**: Target-driven environmental drives (e.g., *1,000 kg Waste Segregation Challenge*, *Zero Leaf Burning Vigilance*) with dynamic progress bars and participant contribution logging.
+- **Transparent Participation Leaderboard**:
+  - Transparent activity points awarded strictly for verified physical actions: events attended (+10 pts), verified pollution reports (+15 pts), and discussion posts (+5 pts).
+  - Explicit guarantee: strictly credits real participation; never fabricates ambient AQI displacement claims or hypothetical emissions math.
+- **Community Discussion Forum**:
+  - Topic-focused threads across Air Quality, Local Smog Concerns, Green Living, Waste Management, and School Protocols.
+  - Multi-user threaded replies, upvotes, and content moderation flagging.
+- **Institution & Society Specific Blueprints**:
+  - **Residential Societies**: Wet mopping protocols, guard electric heating provisions to stop night warming fires, leaf composting pits, and DG filter compliance.
+  - **Schools & Campuses**: Indoor sports shifting during smog peaks, school gate no-idling rules, library clean air sanctuaries, and student eco-ambassadors.
+  - **Workplaces**: Staggered commuting schedules, HVAC MERV-13 filter maintenance, and corporate carpooling fleets.
+- **Ask Community AI Advisor**:
+  - Dual-engine co-pilot (Google Gemini API + deterministic environmental rule fallback).
+  - Structured output schema: Executive Summary, Community Context, Identified Local Concerns, Priority Collective Actions, Implementation Roadmap, and Resource Estimates.
+- **Community Governance & Audit Logs**:
+  - Administrative role assignment, official noticeboard announcements, and immutable audit logs.
 
 ---
 
@@ -279,7 +318,7 @@ ClearAir AI is a full-stack web application designed for families, students, wor
 | **Module 5** | **Low-Emission Travel Planner** | **LIVE & ACTIVE** |
 | **Module 6** | **Pollution Forecast & AI Prediction Engine** | **LIVE & ACTIVE** |
 | **Module 7** | **Sustainable Living Advisor** | **LIVE & ACTIVE** |
-| Module 8 | Community & Society Features | Upcoming |
+| **Module 8** | **Community & Society Intelligence Platform** | **LIVE & ACTIVE** |
 | Module 9 | Environmental Impact Tracker | Upcoming |
 | Module 10 | What-if Pollution Simulator | Upcoming |
 
@@ -311,6 +350,72 @@ ClearAir AI is a full-stack web application designed for families, students, wor
 ---
 
 ## 📡 REST API Reference
+
+### Module 8: Community & Society Intelligence Platform
+- `GET /api/communities` — Search & list communities by city, type, or privacy
+- `POST /api/communities` — Create community with location, objectives, and admin settings
+- `POST /api/communities/join-by-code` — Join community using secure alphanumeric invitation code
+- `GET /api/communities/my` — Get user's active joined communities
+- `GET /api/communities/:id` — Get community details and user membership status
+- `POST /api/communities/:id/join` — Join community (supports public, private pending, and invite-only)
+- `POST /api/communities/:id/leave` — Leave community
+- `GET /api/communities/:id/aqi` — Real-time community AQI, pollutant breakdown, and severe warning check
+- `GET /api/communities/:id/impact` — Aggregate physical community impact (waste segregated, trees planted, attendees)
+- `GET /api/communities/:id/leaderboard` — Transparent participant leaderboard based on verified activity points
+- `GET /api/communities/:id/institution-view` — Tailored governance guidance for RWAs, Schools, or Workplaces
+- `POST /api/communities/:id/advisor` — Community AI Advisor generating structured collective recommendations
+- `GET /api/community-reports` — List citizen pollution reports with category, severity, and status filters
+- `POST /api/community-reports` — Submit citizen pollution incident report with optional anonymity
+- `GET /api/community-reports/hotspots` — Hotspot coordinates feed for Leaflet interactive map
+- `PATCH /api/community-reports/:id/status` — Moderate incident (`submitted` -> `verified` -> `in_progress` -> `resolved`)
+- `POST /api/community-reports/:id/upvote` — Corroborate / upvote incident
+- `GET /api/communities/:id/events` — List community clean drives, tree planting, and workshops
+- `POST /api/communities/:id/events` — Create community event with max participants
+- `POST /api/communities/events/:eventId/register` — RSVP register for event
+- `POST /api/communities/events/:eventId/cancel` — Cancel event RSVP
+- `POST /api/communities/events/:eventId/impact` — Log recorded physical impact
+- `GET /api/communities/:id/campaigns` — List active environmental campaigns with progress bars
+- `POST /api/communities/:id/campaigns` — Create collective goal campaign
+- `POST /api/communities/campaigns/:campaignId/progress` — Record campaign contribution progress
+- `GET /api/communities/:id/posts` — Discussion threads with category filtering
+- `POST /api/communities/:id/posts` — Create discussion thread
+- `GET /api/communities/posts/:postId/comments` — Thread comments
+- `POST /api/communities/posts/:postId/comments` — Reply to thread
+- `POST /api/communities/posts/:postId/like` — Toggle thread upvote
+- `POST /api/communities/posts/:postId/flag` — Flag inappropriate post for review
+- `GET /api/communities/:id/notifications` — Community notices & severe smog broadcasts
+- `POST /api/communities/:id/announcements` — Publish official administrator announcement
+- `GET /api/communities/:id/audit-logs` — Administrative audit history
+
+### Module 7: Sustainable Living Advisor
+- `GET /api/sustainability/dashboard` — Complete sustainability overview, transparent score, and active actions
+- `GET /api/sustainability/recommendations` — Filtered personalized sustainable recommendations across 7 domains
+- `POST /api/sustainability/recommendations/generate` — Generate fresh recommendations based on user profile
+- `PATCH /api/sustainability/recommendations/:id/status` — Mark recommendation adopted or saved
+- `GET /api/sustainability/profile` — User sustainability profile and transparent scoring criteria
+- `PUT /api/sustainability/profile` — Update sustainability habits across transport, energy, cooking, waste, water
+- `GET /api/sustainability/alternatives` — Budget-based alternative habit comparisons (Free, Low-Cost, Medium, Investment)
+- `GET /api/sustainability/local-solutions` — Verified local facilities (E-waste drop-offs, MRFs, metro hubs, PBS stations)
+- `POST /api/sustainability/chat` — AI Sustainable Lifestyle Advisor with structured JSON output
+- `POST /api/sustainability/calculate-impact` — Empirical personal impact calculator (CO2e, PM2.5, NOx, waste, water)
+- `GET /api/sustainability/challenges` — 7-day sustainable living micro-habit challenges
+- `POST /api/sustainability/challenges/:id/start` — Start 7-day challenge
+- `PATCH /api/sustainability/challenges/progress/:dayNumber` — Mark daily micro-habit challenge complete
+- `GET /api/sustainability/household` — Household shared targets and society eco-initiatives
+- `POST /api/sustainability/household/goals` — Add household shared sustainability goal
+- `GET /api/sustainability/comparisons` — Before-and-after lifestyle habit comparison matrix
+
+### Module 6: Pollution Forecast & AI Prediction Engine
+- `GET /api/forecast/current?city=...&lat=...&lon=...` — Real-time telemetry and current atmospheric inversion status
+- `GET /api/forecast/hourly?city=...&hours=...` — High-resolution hourly AQI predictions (up to 72h)
+- `GET /api/forecast/daily?city=...&days=...` — 7-day synoptic pollution outlook with peak windows
+- `GET /api/forecast/pollutants?city=...` — 6-pollutant forecast trajectories (PM2.5, PM10, NO2, SO2, CO, O3)
+- `GET /api/forecast/trends?city=...` — Multi-day trend indicators, diurnal ranges, and moving averages
+- `GET /api/forecast/anomalies?city=...` — Statistical z-score anomaly detection and sudden spike alerts
+- `GET /api/forecast/early-warnings?city=...` — Multi-tiered early warning notices and GRAP trigger stages
+- `GET /api/forecast/weather-insights?city=...` — Inversion layer tracking, boundary layer height, and stagnation indices
+- `POST /api/forecast/ai-explanation` — GenAI explanation of underlying atmospheric physics
+- `GET /api/forecast/accuracy?city=...` — Transparent empirical MAE and RMSE prediction evaluation
 
 ### Module 5: Low-Emission Travel & Smart Route Advisor
 - `POST /api/travel/search` — Generate 3 distinct route alternatives (Fastest Arterial, Clean Bypass, Metro Rail) with Leaflet polyline geometry, estimated street AQI, and priority ranking
@@ -391,11 +496,11 @@ ClearAir AI is a full-stack web application designed for families, students, wor
 When you wish to start the application:
 ```bash
 # Terminal 1: Backend
-cd server
+cd backend
 npm run dev
 
 # Terminal 2: Frontend
-cd client
+cd frontend
 npm run dev
 ```
 

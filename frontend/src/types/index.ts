@@ -1193,3 +1193,314 @@ export interface BeforeAfterComparisonItem {
   scientificExplanation: string;
   disclaimer: string;
 }
+
+// ==========================================
+// MODULE 8: COMMUNITY & SOCIETY INTELLIGENCE
+// ==========================================
+
+export type CommunityType =
+  | 'residential_society'
+  | 'school'
+  | 'college'
+  | 'workplace'
+  | 'neighborhood'
+  | 'environmental_group';
+
+export type CommunityPrivacy = 'public' | 'private' | 'invite_only';
+export type MemberRole = 'owner' | 'admin' | 'moderator' | 'member';
+export type MemberStatus = 'active' | 'pending' | 'rejected' | 'not_joined';
+
+export interface CommunityLocationData {
+  city: string;
+  locality: string;
+  coordinates: {
+    lat: number;
+    lon: number;
+  };
+  address?: string;
+  pincode?: string;
+}
+
+export interface CommunityData {
+  _id: string;
+  name: string;
+  slug: string;
+  type: CommunityType;
+  description: string;
+  location: CommunityLocationData;
+  privacy: CommunityPrivacy;
+  invitationCode: string;
+  ownerId: string;
+  objectives: string[];
+  bannerUrl?: string;
+  logoUrl?: string;
+  adminContact?: {
+    email?: string;
+    phone?: string;
+    organizationName?: string;
+  };
+  membersCount: number;
+  settings: {
+    allowMemberPosts: boolean;
+    requireReportVerification: boolean;
+    autoAlertSevereAqi: boolean;
+    aqiAlertThreshold: number;
+  };
+  isMember?: boolean;
+  membershipStatus?: MemberStatus;
+  userRole?: MemberRole | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type PollutionCategory =
+  | 'garbage_burning'
+  | 'construction_dust'
+  | 'road_dust'
+  | 'vehicle_smoke'
+  | 'industrial_emissions'
+  | 'open_waste_dumping'
+  | 'excessive_smoke'
+  | 'waste_management'
+  | 'other';
+
+export type ReportSeverity = 'low' | 'moderate' | 'high' | 'severe';
+export type ReportStatus =
+  | 'submitted'
+  | 'under_review'
+  | 'verified'
+  | 'in_progress'
+  | 'resolved'
+  | 'rejected';
+
+export interface PollutionReportData {
+  _id: string;
+  communityId?: string;
+  userId: string;
+  reporterName: string;
+  isAnonymous: boolean;
+  category: PollutionCategory;
+  title: string;
+  description: string;
+  location: {
+    name: string;
+    city: string;
+    locality?: string;
+    coordinates: {
+      lat: number;
+      lon: number;
+    };
+  };
+  imageUrl?: string;
+  severity: ReportSeverity;
+  status: ReportStatus;
+  moderationNotes?: string;
+  verifiedAt?: string;
+  resolvedAt?: string;
+  resolvedNotes?: string;
+  isPublic: boolean;
+  upvotes: number;
+  upvoters?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HotspotMapPoint {
+  id: string;
+  type: 'citizen_report' | 'sensor_station';
+  title: string;
+  category: PollutionCategory;
+  severity: ReportSeverity;
+  status: ReportStatus;
+  description: string;
+  coordinates: {
+    lat: number;
+    lon: number;
+  };
+  locationName: string;
+  city: string;
+  upvotes: number;
+  imageUrl?: string;
+  createdAt: string;
+}
+
+export type EventCategory =
+  | 'clean_drive'
+  | 'tree_planting'
+  | 'recycling_camp'
+  | 'workshop'
+  | 'smog_awareness'
+  | 'carpool_initiative'
+  | 'other';
+
+export type EventStatus = 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+
+export interface CommunityEventData {
+  _id: string;
+  communityId: string;
+  title: string;
+  category: EventCategory;
+  description: string;
+  location: {
+    name: string;
+    address?: string;
+    coordinates?: {
+      lat: number;
+      lon: number;
+    };
+  };
+  startDate: string;
+  endDate: string;
+  organizerId: string;
+  organizerName: string;
+  maxParticipants: number;
+  registeredCount: number;
+  status: EventStatus;
+  impactSummary?: {
+    wasteCollectedKg?: number;
+    treesPlanted?: number;
+    attendees?: number;
+    notes?: string;
+  };
+  isUserRegistered?: boolean;
+  createdAt: string;
+}
+
+export type CampaignCategory =
+  | 'waste_segregation'
+  | 'anti_burning'
+  | 'green_commute'
+  | 'energy_conservation'
+  | 'clean_air_audit';
+
+export type CampaignStatus = 'active' | 'completed' | 'draft';
+
+export interface CommunityCampaignData {
+  _id: string;
+  communityId: string;
+  title: string;
+  objective: string;
+  category: CampaignCategory;
+  startDate: string;
+  endDate: string;
+  targetMetric: string;
+  targetValue: number;
+  currentValue: number;
+  participantsCount: number;
+  status: CampaignStatus;
+  resultsNotes?: string;
+  progressPercentage?: number;
+  createdAt: string;
+}
+
+export type PostCategory =
+  | 'air_quality'
+  | 'pollution_concerns'
+  | 'sustainable_living'
+  | 'waste_management'
+  | 'activities'
+  | 'education'
+  | 'general';
+
+export interface CommunityPostData {
+  _id: string;
+  communityId: string;
+  userId: string;
+  authorName: string;
+  authorRole: string;
+  category: PostCategory;
+  title: string;
+  content: string;
+  pinned: boolean;
+  likesCount: number;
+  commentsCount: number;
+  isLiked?: boolean;
+  createdAt: string;
+}
+
+export interface CommunityCommentData {
+  _id: string;
+  postId: string;
+  communityId: string;
+  userId: string;
+  authorName: string;
+  authorRole: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface CommunityNotificationData {
+  _id: string;
+  communityId: string;
+  type:
+    | 'severe_aqi_warning'
+    | 'sudden_aqi_spike'
+    | 'local_incident'
+    | 'announcement'
+    | 'event_reminder';
+  title: string;
+  message: string;
+  severity: 'info' | 'warning' | 'critical';
+  createdAt: string;
+}
+
+export interface CommunityImpactData {
+  communityId: string;
+  communityName: string;
+  communityType: string;
+  totalMembers: number;
+  totalEventsOrganized: number;
+  totalEventAttendees: number;
+  activeCampaignsCount: number;
+  completedCampaignsCount: number;
+  incidentsReported: number;
+  incidentsResolved: number;
+  recordedImpact: {
+    wasteSegregatedKg: number;
+    treesPlanted: number;
+    totalAttendees: number;
+    resolvedPollutionHotspots: number;
+  };
+  transparencyNote: string;
+}
+
+export interface CommunityLeaderboardEntryData {
+  userId: string;
+  name: string;
+  role: string;
+  eventsAttendedCount: number;
+  reportsSubmittedCount: number;
+  discussionPostsCount: number;
+  totalActivityScore: number;
+  badge: string;
+}
+
+export interface CommunityAIData {
+  summary: string;
+  community_context: string;
+  identified_concerns: string[];
+  recommended_actions: Array<{
+    title: string;
+    category: string;
+    targetGroup: string;
+    priority: 'immediate' | 'high' | 'medium';
+    description: string;
+    expectedOutcome: string;
+  }>;
+  implementation_steps: string[];
+  estimated_resources: string[];
+  limitations: string[];
+  data_sources: string[];
+}
+
+export interface InstitutionSpecificPillar {
+  title: string;
+  icon: string;
+  description: string;
+  metricsTracked: string[];
+}
+
+export interface InstitutionSpecificViewData {
+  focusArea: string;
+  pillars: InstitutionSpecificPillar[];
+}
