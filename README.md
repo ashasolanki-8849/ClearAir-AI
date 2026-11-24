@@ -6,7 +6,8 @@
 > **Module 5: Low-Emission Travel Planner & Smart Route Advisor (ACTIVE)**  
 > **Module 6: Pollution Forecast & AI Prediction Engine (ACTIVE)**  
 > **Module 7: Sustainable Living Advisor & Green Lifestyle Intelligence (ACTIVE)**  
-> **Module 8: Community & Society Intelligence Platform (ACTIVE)**
+> **Module 8: Community & Society Intelligence Platform (ACTIVE)**  
+> **Module 9: Environmental Impact Tracker & Intelligence (ACTIVE)**
 
 ClearAir AI is a full-stack web application designed for families, students, working professionals, elderly citizens, and communities to understand severe winter smog and urban air pollution, monitor real-time particulates, and make safer daily health decisions.
 
@@ -307,6 +308,40 @@ ClearAir AI is a full-stack web application designed for families, students, wor
 
 ---
 
+### 📊 Module 9: Environmental Impact Tracker & Intelligence
+- **Auditable Personal Carbon Footprint Ledger (`/impact`)**:
+  - Grounded in official regulatory emission coefficients: Central Electricity Authority (CEA Baseline Database v19 grid factor: $0.716\text{ kg CO}_2\text{e/kWh}$), DMRC metro railway factor ($0.028\text{ kg CO}_2\text{e/pkm}$), IPCC mobile tailpipe combustion factors, and CPCB solid waste diversion models.
+  - Granular domain calculation:
+    - **Transportation**: Mode-specific calculations (petrol/diesel personal car, two-wheeler, electric vehicle, public bus, urban metro, passenger load sharing).
+    - **Electricity & Energy**: Utility bill accounting, renewable offset (rooftop solar net metering), and star-rated appliance loads.
+    - **Household Fuel**: Domestic LPG cylinders ($42.37\text{ kg CO}_2\text{e}$ per 14.2 kg cylinder) and piped natural gas (PNG $2.15\text{ kg CO}_2\text{e/m}^3$).
+    - **Solid Waste**: Landfill methane burden ($+1.45\text{ kg CO}_2\text{e/kg}$) vs. decentralized organic composting (avoiding $-0.52\text{ kg CO}_2\text{e/kg}$) and recyclables recovery ($-0.85\text{ kg CO}_2\text{e/kg}$).
+    - **Water Consumption**: Municipal potable supply pumping and treatment energy intensity ($0.00035\text{ kg CO}_2\text{e/L}$).
+- **Strict Scientific Metric Disaggregation**:
+  - **Global Climate Impact**: Greenhouse gases ($\text{CO}_2, \text{CH}_4, \text{N}_2\text{O}$) expressed in $\text{kg CO}_2\text{e}$.
+  - **Local Breathing Zone Air Quality**: Criteria air pollutants ($\text{PM}_{2.5}, \text{PM}_{10}, \text{NO}_x, \text{SO}_2, \text{CO}$) strictly tracked separately in tailpipe grams.
+  - **Personal Inhalation Protection**: Quantified grams of $\text{PM}_{2.5}$ avoided from lung deposition through N95 mask usage, indoor HEPA filtration, and clean bypass routing.
+  - **Scientific Transparency Callout**: Clearly highlights that individual carbon footprint reductions do not immediately alter regional citywide ambient AQI, which is heavily governed by meteorological inversion blankets and collective regional emissions.
+- **Period-over-Period Environmental Comparison**:
+  - Side-by-side comparison across time horizons (`today`, `yesterday`, `this_week`, `last_week`, `this_month`, `last_month`, `last_3_months`, `this_year`).
+  - Transparent calculation of absolute and percentage deltas with reduction badges and audit completeness notices.
+- **Daily Environmental Activity Logger**:
+  - Unified activity logger tracking daily green habits, carpools, public transit rides, composting, and energy-saving chores.
+  - Direct persistence into verified database models with categorization, quantity tracking, and quality ratings (`User Entered`, `Measured`, `Calculated`, `Verified`).
+- **Personal Environmental Reduction Goals**:
+  - Benchmark setting with category targets, units, target deadlines, and progress bars.
+  - Real-time increment updates and status transitions (`active`, `completed`, `paused`, `abandoned`).
+- **Collective Household & Community Impact**:
+  - **Family Household**: Aggregates household-level footprints without double-counting shared residential meters (utility bills, piped gas).
+  - **Community Intelligence**: Integrates with Module 8 society drives, clean air campaigns, and physical waste diversion.
+- **Smart Rule-Based Insights & AI Impact Advisor**:
+  - Identifies dominant emission drivers, rising trends, and audit data gaps.
+  - Conversational AI co-pilot (Google Gemini API + deterministic rule fallback) delivering structured actionable guidance with CEA/IPCC citations.
+- **Audit-Ready Report Generator & CSV Export**:
+  - One-click print/PDF environmental statements and RFC-compliant CSV ledger downloads.
+
+---
+
 ## 🏛️ Platform Architecture Roadmap (Modules 1–10)
 
 | Module | Title | Status |
@@ -319,7 +354,7 @@ ClearAir AI is a full-stack web application designed for families, students, wor
 | **Module 6** | **Pollution Forecast & AI Prediction Engine** | **LIVE & ACTIVE** |
 | **Module 7** | **Sustainable Living Advisor** | **LIVE & ACTIVE** |
 | **Module 8** | **Community & Society Intelligence Platform** | **LIVE & ACTIVE** |
-| Module 9 | Environmental Impact Tracker | Upcoming |
+| **Module 9** | **Environmental Impact Tracker & Intelligence** | **LIVE & ACTIVE** |
 | Module 10 | What-if Pollution Simulator | Upcoming |
 
 ---

@@ -23,7 +23,6 @@ export const Sidebar = () => {
     'flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-900 transition-colors';
 
   const futureModules = [
-    { id: 9, name: 'Impact Tracker', icon: BarChart3 },
     { id: 10, name: 'What-if Simulator', icon: Sliders },
   ];
 
@@ -243,6 +242,30 @@ export const Sidebar = () => {
               <div className="flex flex-col">
                 <span>Community & Society</span>
                 <span className="text-[10px] opacity-70 font-normal">Hotspots, Campaigns & RWAs</span>
+              </div>
+            </NavLink>
+          </nav>
+        </div>
+
+        {/* Module 9: Environmental Impact Tracker & Intelligence (Active) */}
+        <div className="pt-3 border-t border-zinc-100 dark:border-zinc-900">
+          <div className="flex items-center justify-between px-2 mb-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+              Module 9: Impact Tracker
+            </span>
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">
+              ACTIVE
+            </span>
+          </div>
+          <nav className="flex flex-col space-y-1">
+            <NavLink
+              to="/impact"
+              className={({ isActive }) => (isActive ? activeClasses : inactiveClasses)}
+            >
+              <BarChart3 className="w-4 h-4 text-emerald-400" />
+              <div className="flex flex-col">
+                <span>Impact Tracker</span>
+                <span className="text-[10px] opacity-70 font-normal">Auditable Footprint & Goals</span>
               </div>
             </NavLink>
           </nav>

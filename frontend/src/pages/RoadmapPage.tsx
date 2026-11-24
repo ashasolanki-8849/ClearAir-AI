@@ -117,14 +117,15 @@ export const RoadmapPage = () => {
     },
     {
       id: 9,
-      title: 'Module 9: Environmental Impact Tracker',
-      status: 'upcoming',
-      badge: 'UPCOMING',
+      title: 'Module 9: Environmental Impact Tracker & Intelligence',
+      status: 'active',
+      badge: 'LIVE & ACTIVE',
       icon: BarChart3,
       description:
-        'Personal and community scorecards tracking reduced personal inhalation of PM2.5 and collective emissions avoided through low-emission choices.',
+        'Auditable personal carbon footprint calculator (CEA v19 grid & IPCC factors), local air pollution disaggregation (CO2e vs ambient AQI & avoided PM2.5 inhalation), before/after period comparison, family household aggregation without double counting, goal benchmarks, smart insights, and AI Impact Advisor.',
       architecture:
-        'User impact ledger aggregating daily logs and microgram inhalation reductions.',
+        'EmissionFactor, CarbonFootprintRecord, EnvironmentalActivity, EnvironmentalGoal & EnvironmentalReportRecord MongoDB models, rule-based comparison engine, CEA/CPCB/DMRC emission registries, and Gemini Impact Advisor.',
+      route: '/impact',
     },
     {
       id: 10,

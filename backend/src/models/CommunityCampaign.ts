@@ -70,4 +70,5 @@ const CommunityCampaignSchema = new Schema<ICommunityCampaign>(
 
 CommunityCampaignSchema.index({ communityId: 1, status: 1 });
 
-export default mongoose.model<ICommunityCampaign>('CommunityCampaign', CommunityCampaignSchema);
+export const CommunityCampaign = mongoose.model<ICommunityCampaign>('CommunityCampaign', CommunityCampaignSchema);
+export default CommunityCampaign;

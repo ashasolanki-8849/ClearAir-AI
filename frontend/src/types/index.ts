@@ -1504,3 +1504,396 @@ export interface InstitutionSpecificViewData {
   focusArea: string;
   pillars: InstitutionSpecificPillar[];
 }
+
+// ==========================================
+// MODULE 9: ENVIRONMENTAL IMPACT TRACKER
+// ==========================================
+
+export type ReportType =
+  | 'executive_summary'
+  | 'comprehensive_audit'
+  | 'category_deep_dive'
+  | 'progress_update';
+
+export type FootprintCategory =
+  | 'transportation'
+  | 'electricity'
+  | 'household_fuel'
+  | 'waste'
+  | 'water'
+  | 'other';
+
+export type DataQualityStatus =
+  | 'User Entered'
+  | 'Measured'
+  | 'Imported'
+  | 'Estimated'
+  | 'Calculated'
+  | 'Verified';
+
+export interface CarbonFootprintRecordData {
+  _id: string;
+  userId: string;
+  householdId?: string;
+  category: FootprintCategory;
+  activityName: string;
+  inputValues: {
+    quantity: number;
+    unit: string;
+    passengers?: number;
+    fuelType?: string;
+    transportMode?: string;
+    distanceKm?: number;
+    kwh?: number;
+    billingPeriod?: string;
+    gridRegion?: string;
+    wasteType?: string;
+    disposalMethod?: string;
+    waterLiters?: number;
+    notes?: string;
+  };
+  calculatedEmissionsKgCO2e: number;
+  criteriaPollutantsGrams?: {
+    pm25?: number;
+    pm10?: number;
+    nox?: number;
+    so2?: number;
+    co?: number;
+  };
+  emissionFactor: {
+    name: string;
+    factor: number;
+    unit: string;
+    source: string;
+    methodology: string;
+  };
+  dataQuality: {
+    status: DataQualityStatus;
+    completenessPercentage: number;
+    assumptions: string[];
+    limitations: string[];
+  };
+  date: string;
+  period: 'single' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+  createdAt?: string;
+}
+
+export type ActivityCategory =
+  | 'transportation'
+  | 'energy'
+  | 'waste'
+  | 'water'
+  | 'community'
+  | 'consumption';
+
+export interface EnvironmentalActivityData {
+  _id: string;
+  userId: string;
+  householdId?: string;
+  activityName: string;
+  category: ActivityCategory;
+  date: string;
+  quantity?: number;
+  unit?: string;
+  notes?: string;
+  isCompleted: boolean;
+  dataQuality: {
+    status: DataQualityStatus;
+    source: string;
+  };
+  footprintRecordId?: string;
+  createdAt?: string;
+}
+
+export type GoalCategory =
+  | 'carbon'
+  | 'electricity'
+  | 'transportation'
+  | 'waste'
+  | 'water'
+  | 'habits';
+
+export type GoalStatus = 'active' | 'completed' | 'paused' | 'abandoned';
+
+export interface EnvironmentalGoalData {
+  _id: string;
+  userId: string;
+  householdId?: string;
+  title: string;
+  description?: string;
+  category: GoalCategory;
+  targetValue: number;
+  currentValue: number;
+  targetReductionKgCo2e?: number;
+  unit: string;
+  startDate: string;
+  endDate: string;
+  status: GoalStatus;
+  trackingFrequency: 'daily' | 'weekly' | 'monthly';
+  remindersEnabled: boolean;
+  notes?: string;
+  createdAt?: string;
+}
+
+export interface EmissionFactorData {
+  _id: string;
+  name: string;
+  category: string;
+  value: number;
+  factorValue?: number;
+  unit: string;
+  geography: string;
+  source: string;
+  sourceUrl?: string;
+  publicationDate?: string;
+  methodology: string;
+  version: string;
+  uncertaintyPercentage?: number;
+  dataQuality?: string;
+  description?: string;
+  code?: string;
+  year?: number;
+}
+
+export interface DashboardImpactData {
+  periodLabel: string;
+  startDate: string;
+  endDate: string;
+  hasSufficientData: boolean;
+  totalCarbonFootprintKgCO2e: number;
+  breakdown: {
+    transportationKgCO2e: number;
+    electricityKgCO2e: number;
+    householdFuelKgCO2e: number;
+    wasteKgCO2e: number;
+    waterKgCO2e: number;
+  };
+  sharesPercentage: {
+    transportation: number;
+    electricity: number;
+    householdFuel: number;
+    waste: number;
+    water: number;
+  };
+  criteriaPollutantsGrams: {
+    pm25: number;
+    pm10: number;
+    nox: number;
+    co: number;
+    so2: number;
+  };
+  resourceMetrics: {
+    totalDistanceKm: number;
+    electricityKwh: number;
+    waterLiters: number;
+    wasteDivertedKg: number;
+    compostProducedKg: number;
+  };
+  activitiesCompletedCount: number;
+  activeGoalsCount: number;
+  trendSeries: Array<{
+    date: string;
+    totalKgCO2e: number;
+    transport: number;
+    energy: number;
+    waste: number;
+  }>;
+  dataQualitySummary: {
+    averageCompletenessPercentage: number;
+    recordCountsByStatus: Record<string, number>;
+  };
+}
+
+export interface ComparisonPeriodMetrics {
+  totalEmissionsKg: number;
+  transportationKg: number;
+  energyKg: number;
+  wasteKg: number;
+  waterKg: number;
+  distanceKm: number;
+  electricityKwh: number;
+  recordsCount: number;
+}
+
+export interface ComparisonDiffItem {
+  previous: number;
+  current: number;
+  absoluteDifference: number;
+  percentageDifference: number | null;
+  isReduction: boolean;
+}
+
+export interface ComparisonAnalyticsData {
+  period1: {
+    label: string;
+    startDate: string;
+    endDate: string;
+    metrics: ComparisonPeriodMetrics;
+  };
+  period2: {
+    label: string;
+    startDate: string;
+    endDate: string;
+    metrics: ComparisonPeriodMetrics;
+  };
+  period1Metrics?: any;
+  period2Metrics?: any;
+  differences: {
+    totalCarbonFootprint?: ComparisonDiffItem;
+    transportation?: ComparisonDiffItem;
+    energy?: ComparisonDiffItem;
+    waste?: ComparisonDiffItem;
+    distanceKm?: ComparisonDiffItem;
+    electricityKwh?: ComparisonDiffItem;
+    [key: string]: any;
+  };
+  percentageChanges?: any;
+  dataCompleteness: {
+    period1RecordsCount: number;
+    period2RecordsCount: number;
+    isComparisonReliable: boolean;
+    notice: string;
+  };
+}
+
+export interface SmartInsightItem {
+  title: string;
+  explanation: string;
+  category: string;
+  metric?: string;
+  suggestedAction?: string;
+  completeness?: string;
+  priority?: string;
+  description?: string;
+  recommendedAction?: string;
+}
+
+export interface LocalPollutionAwarenessData {
+  location?: {
+    name: string;
+    city: string;
+    coordinates: { lat: number; lon: number };
+  };
+  stationName?: string;
+  city?: string;
+  currentAqi: number;
+  aqiCategory?: string;
+  standard?: string;
+  pollutants: {
+    pm25: number;
+    pm10: number;
+    no2: number;
+    so2: number;
+    co: number;
+    o3: number;
+  };
+  hourlyTrend?: Array<{
+    time: string;
+    aqi: number;
+    pm25: number;
+    pm10: number;
+    temperature: number;
+  }>;
+  weather?: {
+    temperature: number;
+    humidity: number;
+    windSpeed: number;
+  };
+  avoidedExposureEstimate?: { pm25GramsAvoided: number };
+  dataSource?: string;
+  lastUpdated: string;
+  scientificBoundaryNote?: string;
+}
+
+export interface EnvironmentalReportData {
+  _id: string;
+  userId: string;
+  reportType?: string;
+  period?: string;
+  title?: string;
+  reportingPeriod?: {
+    startDate: string;
+    endDate: string;
+    label: string;
+  };
+  reportData?: Record<string, any>;
+  totalCarbonFootprintKg?: number;
+  breakdownByScope?: any;
+  totalWasteDivertedKg?: number;
+  recommendations?: string[];
+  generatedAt: string;
+}
+
+export interface FamilyImpactSummaryData {
+  familyMembersCount?: number;
+  memberCount?: number;
+  familyName?: string;
+  totalHouseholdFootprintKg?: number;
+  perCapitaFootprintKg?: number;
+  householdMetrics?: {
+    totalEmissionsKgCO2e: number;
+    electricityKwh: number;
+    waterLiters: number;
+    wasteDivertedKg: number;
+  };
+  perCapitaEmissionsKgCO2e?: number;
+  note?: string;
+}
+
+export interface CommunityImpactProgressData {
+  communityId?: string;
+  communityName?: string;
+  membersCount?: number;
+  campaignsCount?: number;
+  eventsCount?: number;
+  totalAttendees?: number;
+  wasteCollectedOrDivertedKg?: number;
+  treesPlanted?: number;
+  totalVerifiedReductionKg?: number;
+  totalWasteDivertedKg?: number;
+  activeCampaignsCount?: number;
+  campaigns?: Array<{
+    _id: string;
+    title: string;
+    participantsCount: number;
+    verifiedReductionsKgCo2e: number;
+  }>;
+  notice?: string;
+}
+
+export interface ImpactAIAdvisorData {
+  summary?: string;
+  directAnswer?: string;
+  estimatedSavingsKgCo2e?: number;
+  actionPlan?: string[];
+  scientificCaveats?: string;
+  key_findings?: string[];
+  main_impact_categories?: Array<{
+    category: string;
+    emissionsKgCO2e: number;
+    sharePercentage: number;
+  }>;
+  period_comparison?: Record<string, any>;
+  recommended_actions?: Array<{
+    title: string;
+    category: string;
+    expectedReductionKgCO2e: number;
+    priority: 'immediate' | 'high' | 'medium';
+    description: string;
+  }>;
+  calculation_explanations?: string[];
+  data_limitations?: string[];
+  data_sources?: string[];
+  dataSources?: string[];
+}
+
+export type EmissionFactor = EmissionFactorData;
+export type EnvironmentalGoal = EnvironmentalGoalData;
+export type EnvironmentalReportRecord = EnvironmentalReportData;
+export type LocalPollutionAwareness = LocalPollutionAwarenessData;
+export type SmartEnvironmentalInsight = SmartInsightItem;
+export type PeriodComparisonResult = ComparisonAnalyticsData;
+export type FamilyFootprintSummary = FamilyImpactSummaryData;
+export type CommunityImpactSummary = CommunityImpactProgressData;
+export type ImpactAdvisorResponse = ImpactAIAdvisorData;
+
