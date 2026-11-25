@@ -1,224 +1,174 @@
 import { Link } from 'react-router-dom';
 import {
-  Wind,
-  Shield,
-  Activity,
-  ArrowRight,
-  TrendingDown,
+  CloudFog,
   Sparkles,
-  MapPin,
+  Bell,
+  Navigation,
+  Calendar,
   CheckCircle2,
-  Award,
+  ArrowRight,
+  ShieldCheck,
+  MapPin,
 } from 'lucide-react';
-import { useAQI } from '../context/AQIContext';
-import { useAuth } from '../context/AuthContext';
-import { getAQIConfig } from '../utils/aqiHelper';
-import { Button } from '../components/common/Button';
-import { Footer } from '../components/layout/Footer';
 import { Navbar } from '../components/layout/Navbar';
+import { Footer } from '../components/layout/Footer';
+import { CitySmogVisual } from '../components/common/CitySmogVisual';
+import { useAQI } from '../context/AQIContext';
+import { calculatePollutionMetrics } from '../utils/pollutionScale';
 import { useState } from 'react';
 import { LocationSelectorModal } from '../components/dashboard/LocationSelectorModal';
 
 export const Home = () => {
-  const { aqiData, location } = useAQI();
-  const { isAuthenticated } = useAuth();
-  const [modalOpen, setModalOpen] = useState(false);
+  const { location, aqiData } = useAQI();
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const metrics = calculatePollutionMetrics(aqiData?.aqi, aqiData?.weather);
 
-  const config = aqiData ? getAQIConfig(aqiData.aqiCategory) : null;
+  const features = [
+    {
+      icon: CloudFog,
+      title: 'Check pollution near you',
+      description: 'See current pollution and smog levels in your area using a clear percentage score.',
+      link: '/pollution',
+    },
+    {
+      icon: Sparkles,
+      title: 'Ask the AI assistant',
+      description: 'Get immediate, friendly advice in simple English on how to protect your family.',
+      link: '/assistant',
+    },
+    {
+      icon: Bell,
+      title: 'Receive pollution alerts',
+      description: 'Know when air quality becomes unsafe or when smog spikes suddenly.',
+      link: '/alerts',
+    },
+    {
+      icon: Navigation,
+      title: 'Plan safer travel',
+      description: 'Find lower-pollution travel routes to avoid breathing heavy roadside exhaust.',
+      link: '/travel',
+    },
+    {
+      icon: Calendar,
+      title: 'Check pollution forecast',
+      description: 'See simple day-by-day pollution predictions to plan your week ahead safely.',
+      link: '/forecast',
+    },
+    {
+      icon: CheckCircle2,
+      title: 'Learn what actions to take',
+      description: 'Simple everyday steps to keep indoor air clean and reduce personal smog exposure.',
+      link: '/what-to-do',
+    },
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-zinc-900 dark:bg-black dark:text-zinc-100">
-      <Navbar onOpenLocationModal={() => setModalOpen(true)} />
+    <div className="min-h-screen flex flex-col bg-white text-zinc-900 dark:bg-black dark:text-zinc-100 transition-colors">
+      <Navbar onOpenLocationModal={() => setIsLocationModalOpen(true)} />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden py-16 sm:py-24 border-b border-zinc-200 dark:border-zinc-800">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Left Copy */}
-            <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-800 dark:bg-[#090909] dark:text-zinc-300">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Module 1 Active: Live Smog & Particulate Intelligence</span>
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left Column: Heading, Description, Buttons */}
+            <div className="space-y-6 text-center lg:text-left">
+              {/* Simple Location Pill */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                <MapPin className="w-3.5 h-3.5 text-sky-500" />
+                <span>Monitoring: {location.name}</span>
+                {metrics.isDataAvailable && (
+                  <span className={`font-bold ml-1 ${metrics.statusColor}`}>
+                    ({metrics.pollutionPercent}% • {metrics.status})
+                  </span>
+                )}
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-white leading-[1.1]">
-                Navigate severe smog with{' '}
-                <span className="text-emerald-500 font-mono">real-time</span> environmental telemetry.
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-white leading-[1.15]">
+                Know Your Air. <br />
+                <span className="text-sky-500">Stay Safe.</span>
               </h1>
 
-              <p className="text-base sm:text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl leading-relaxed">
-                ClearAir AI empowers families, students, working professionals, and vulnerable communities to understand ambient toxicity, monitor real-time particulates, and make safer daily decisions during peak winter pollution.
+              <p className="text-base sm:text-lg text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                Check pollution near you, understand today's air quality, and get simple advice to protect yourself and your family.
               </p>
 
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <Link to="/dashboard">
-                  <Button size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                    Open Live Dashboard
-                  </Button>
+              {/* Only Two Main Action Buttons as strictly specified */}
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-2">
+                <Link
+                  to="/pollution"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm shadow-md transition-colors"
+                >
+                  <CloudFog className="w-4 h-4" />
+                  <span>Check Air Quality</span>
                 </Link>
-                {!isAuthenticated && (
-                  <Link to="/register">
-                    <Button variant="outline" size="lg">
-                      Create Protected Account
-                    </Button>
+
+                <Link
+                  to="/register"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-900 dark:text-white font-semibold text-sm transition-colors"
+                >
+                  <span>Get Started</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+
+              {/* Simple Safety Note */}
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 pt-1">
+                ✓ Free to use • No complicated numbers • Made for everyone
+              </p>
+            </div>
+
+            {/* Right Column: Realistic Visual */}
+            <div className="flex justify-center">
+              <CitySmogVisual />
+            </div>
+          </div>
+        </section>
+
+        {/* Simple "What You Can Do" Section */}
+        <section className="py-14 sm:py-20 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
+                Everything You Need To Stay Protected
+              </h2>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                Simple tools designed to help you navigate severe smog and urban pollution.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {features.map((item, idx) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={idx}
+                    to={item.link}
+                    className="p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-400 dark:hover:border-sky-600 transition-all shadow-sm group"
+                  >
+                    <div className="p-3 rounded-xl bg-sky-500/10 text-sky-500 dark:bg-sky-500/20 dark:text-sky-400 w-fit mb-4 group-hover:scale-105 transition-transform">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <h3 className="font-bold text-base text-zinc-900 dark:text-white mb-1.5 flex items-center justify-between">
+                      <span>{item.title}</span>
+                      <ArrowRight className="w-4 h-4 text-zinc-400 group-hover:text-sky-500 group-hover:translate-x-1 transition-all" />
+                    </h3>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                      {item.description}
+                    </p>
                   </Link>
-                )}
-                <Link to="/roadmap">
-                  <Button variant="ghost" size="lg">
-                    Platform Roadmap (M2–M10)
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Verified Sources Badges */}
-              <div className="pt-4 flex flex-wrap items-center gap-6 text-xs text-zinc-500 dark:text-zinc-400">
-                <div className="flex items-center gap-1.5">
-                  <Award className="w-4 h-4 text-emerald-500" />
-                  <span>Indian CPCB Standards</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>Copernicus CAMS Satellites</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Activity className="w-4 h-4 text-emerald-500" />
-                  <span>Zero Fabricated Data</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Live Snapshot Preview Card */}
-            <div className="lg:col-span-5">
-              <div className="rounded-2xl border border-zinc-200 bg-zinc-50/50 p-6 shadow-xl dark:border-zinc-800 dark:bg-[#070707]">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-emerald-500" />
-                    <span className="font-semibold text-sm">{location.name} Live Telemetry</span>
-                  </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 font-bold">
-                    REAL-TIME
-                  </span>
-                </div>
-
-                {aqiData ? (
-                  <div className="mt-4 space-y-4">
-                    <div className="flex items-baseline justify-between">
-                      <div>
-                        <span
-                          className="text-6xl font-extrabold font-mono"
-                          style={{ color: config?.color }}
-                        >
-                          {aqiData.aqi}
-                        </span>
-                        <p className="text-xs font-mono uppercase text-zinc-400 font-semibold mt-1">
-                          Air Quality Index
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <span
-                          className="inline-block px-3 py-1 rounded-full text-xs font-bold border"
-                          style={{
-                            backgroundColor: config?.bgColor,
-                            borderColor: config?.borderColor,
-                            color: config?.textColor,
-                          }}
-                        >
-                          {config?.label}
-                        </span>
-                        <p className="text-[11px] text-zinc-400 mt-1 font-mono">
-                          Temp: {aqiData.weather.temperature}°C • {aqiData.weather.condition}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Pollutant snapshot row */}
-                    <div className="grid grid-cols-3 gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-center">
-                      <div className="p-2 rounded bg-white dark:bg-black border border-zinc-100 dark:border-zinc-900">
-                        <span className="text-[10px] text-zinc-400 font-mono">PM2.5</span>
-                        <p className="text-sm font-bold font-mono">{aqiData.pollutants.pm25} µg</p>
-                      </div>
-                      <div className="p-2 rounded bg-white dark:bg-black border border-zinc-100 dark:border-zinc-900">
-                        <span className="text-[10px] text-zinc-400 font-mono">PM10</span>
-                        <p className="text-sm font-bold font-mono">{aqiData.pollutants.pm10} µg</p>
-                      </div>
-                      <div className="p-2 rounded bg-white dark:bg-black border border-zinc-100 dark:border-zinc-900">
-                        <span className="text-[10px] text-zinc-400 font-mono">NO2</span>
-                        <p className="text-sm font-bold font-mono">{aqiData.pollutants.no2} µg</p>
-                      </div>
-                    </div>
-
-                    <Link to="/dashboard" className="block pt-2">
-                      <Button variant="secondary" className="w-full justify-center text-xs">
-                        View Complete Analysis & Hourly Curves →
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="py-12 text-center text-xs text-zinc-500">
-                    Loading live satellite feed...
-                  </div>
-                )}
-              </div>
+                );
+              })}
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Pillars Section */}
-      <section className="py-16 bg-zinc-50/50 dark:bg-black border-b border-zinc-200 dark:border-zinc-800">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-              Designed for Severe Urban Air Pollution
-            </h2>
-            <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-              Winter smog is driven by particulate matter trapping, thermal inversions, and agricultural biomass burning. ClearAir AI provides scientific clarity without alarmism.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-[#070707] space-y-3">
-              <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-900 text-emerald-500">
-                <Activity className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
-                Multi-Pollutant Telemetry
-              </h3>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                Monitor PM2.5, PM10, NO2, SO2, CO, and O3 simultaneously against standard health thresholds rather than relying on ambiguous single scores.
-              </p>
-            </div>
-
-            <div className="p-6 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-[#070707] space-y-3">
-              <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-900 text-amber-500">
-                <Shield className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
-                Demographic Risk Profiling
-              </h3>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                Health guidelines adapted for students, children, working commuters, elderly citizens, and individuals managing respiratory conditions.
-              </p>
-            </div>
-
-            <div className="p-6 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-[#070707] space-y-3">
-              <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-900 text-cyan-500">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
-                Modular AI-Ready Architecture
-              </h3>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                A robust Node.js, Express, MongoDB Atlas, and React foundation ready for upcoming GenAI Smog Assistants, Route Planners, and Forecasting engines.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
       <Footer />
 
-      <LocationSelectorModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+      <LocationSelectorModal
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
+      />
     </div>
   );
 };

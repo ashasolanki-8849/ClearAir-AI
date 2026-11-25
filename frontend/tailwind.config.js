@@ -16,12 +16,15 @@ export default {
           muted: '#888888',
         },
         aqi: {
-          good: '#10b981',        // 0-50
-          satisfactory: '#34d399',// 51-100
-          moderate: '#f59e0b',    // 101-200
-          poor: '#f97316',        // 201-300
-          verypoor: '#ef4444',    // 301-400
-          severe: '#991b1b',      // 401-500+
+          low: '#0ea5e9',         // soft blue
+          good: '#0ea5e9',        // soft blue (no green)
+          satisfactory: '#38bdf8',// sky blue
+          moderate: '#eab308',    // yellow
+          poor: '#f97316',        // orange
+          high: '#f97316',        // orange
+          verypoor: '#ef4444',    // red
+          veryhigh: '#ef4444',    // red
+          severe: '#dc2626',      // crimson red
         }
       },
       fontFamily: {

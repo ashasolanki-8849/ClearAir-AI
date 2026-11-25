@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Button } from '../components/common/Button';
-import { Input } from '../components/common/Input';
-import { Card } from '../components/common/Card';
-import { Wind, Lock, Mail, ArrowRight } from 'lucide-react';
+import { Wind, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -19,98 +16,111 @@ export const Login = () => {
     e.preventDefault();
     setError(null);
 
-    if (!email || !password) {
+    if (!email.trim() || !password.trim()) {
       setError('Please provide both email and password.');
       return;
     }
 
     setLoading(true);
     try {
-      await login(email, password);
+      await login(email.trim(), password);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please verify credentials.');
+      setError(err.message || 'Login failed. Please verify your email and password.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-zinc-50 dark:bg-black">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-black py-12 transition-colors">
       <div className="w-full max-w-md space-y-6">
         {/* Brand header */}
         <div className="text-center space-y-2">
           <Link to="/" className="inline-flex items-center gap-2 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-black">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/10 text-sky-500 dark:bg-sky-500/20 dark:text-sky-400">
               <Wind className="h-5 w-5" />
             </div>
             <span className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">
-              ClearAir <span className="text-emerald-500 font-mono">AI</span>
+              ClearAir
             </span>
           </Link>
-          <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            Sign In to ClearAir AI
+          <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
+            Welcome Back
           </h2>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Access personalized smog telemetry, saved locations, and health alerts.
+            Sign in to check pollution near you and ask the AI Assistant for advice.
           </p>
         </div>
 
-        <Card className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-600 dark:text-red-400 font-medium">
-                {error}
+        <div className="p-6 sm:p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black shadow-lg space-y-5">
+          {error && (
+            <div className="p-3.5 rounded-xl border border-red-500/20 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+            <div>
+              <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-3 w-4 h-4 text-zinc-400" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@domain.com"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
               </div>
-            )}
-
-            <Input
-              label="Email Address"
-              type="email"
-              placeholder="you@domain.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              leftIcon={<Mail className="w-4 h-4 text-zinc-400" />}
-              required
-            />
-
-            <Input
-              label="Password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              leftIcon={<Lock className="w-4 h-4 text-zinc-400" />}
-              required
-            />
-
-            <div className="flex items-center justify-between text-xs">
-              <Link
-                to="/forgot-password"
-                className="text-zinc-500 hover:text-emerald-500 transition-colors"
-              >
-                Forgot your password?
-              </Link>
             </div>
 
-            <Button
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-medium text-zinc-700 dark:text-zinc-300">
+                  Password
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-sky-500 hover:underline text-[11px]"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-3 w-4 h-4 text-zinc-400" />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+            </div>
+
+            <button
               type="submit"
-              size="md"
-              className="w-full justify-center"
-              isLoading={loading}
-              rightIcon={<ArrowRight className="w-4 h-4" />}
+              disabled={loading}
+              className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-xs transition-colors shadow-sm disabled:opacity-50"
             >
-              Sign In
-            </Button>
+              <span>{loading ? 'Signing in...' : 'Sign In'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </form>
 
-          <div className="mt-6 pt-4 border-t border-zinc-100 dark:border-zinc-900 text-center text-xs text-zinc-500">
-            Don't have an account yet?{' '}
-            <Link to="/register" className="font-semibold text-emerald-500 hover:underline">
-              Register now
+          <div className="pt-2 text-center text-xs text-zinc-500">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-sky-500 font-semibold hover:underline">
+              Create an account
             </Link>
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   );

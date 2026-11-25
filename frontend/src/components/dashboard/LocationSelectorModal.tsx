@@ -16,10 +16,12 @@ const POPULAR_CITIES = [
   { name: 'Mumbai', city: 'Mumbai', lat: 19.0760, lon: 72.8777, country: 'India' },
   { name: 'Kolkata', city: 'Kolkata', lat: 22.5726, lon: 88.3639, country: 'India' },
   { name: 'Bengaluru', city: 'Bengaluru', lat: 12.9716, lon: 77.5946, country: 'India' },
-  { name: 'Lahore', city: 'Lahore', lat: 31.5204, lon: 74.3587, country: 'Pakistan' },
-  { name: 'Beijing', city: 'Beijing', lat: 39.9042, lon: 116.4074, country: 'China' },
-  { name: 'London', city: 'London', lat: 51.5074, lon: -0.1278, country: 'United Kingdom' },
-  { name: 'New York', city: 'New York', lat: 40.7128, lon: -74.0060, country: 'United States' },
+  { name: 'Chennai', city: 'Chennai', lat: 13.0827, lon: 80.2707, country: 'India' },
+  { name: 'Hyderabad', city: 'Hyderabad', lat: 17.3850, lon: 78.4867, country: 'India' },
+  { name: 'Ahmedabad', city: 'Ahmedabad', lat: 23.0225, lon: 72.5714, country: 'India' },
+  { name: 'Pune', city: 'Pune', lat: 18.5204, lon: 73.8567, country: 'India' },
+  { name: 'Jaipur', city: 'Jaipur', lat: 26.9124, lon: 75.7873, country: 'India' },
+  { name: 'Lucknow', city: 'Lucknow', lat: 26.8467, lon: 80.9462, country: 'India' },
 ];
 
 export const LocationSelectorModal = ({ isOpen, onClose }: LocationSelectorModalProps) => {
@@ -75,19 +77,19 @@ export const LocationSelectorModal = ({ isOpen, onClose }: LocationSelectorModal
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Select Air Quality Monitoring Location"
-      description="Choose a city or use your device's GPS to view real-time smog and pollutant readings."
+      title="Select Your Location"
+      description="Choose your city or allow GPS to view local pollution and safety advice."
     >
       <div className="space-y-4">
         {/* Geolocation Trigger */}
         <Button
           variant="outline"
           className="w-full justify-center py-2.5"
-          leftIcon={<Navigation className="w-4 h-4 text-emerald-500" />}
+          leftIcon={<Navigation className="w-4 h-4 text-sky-500" />}
           onClick={handleDetectGPS}
           disabled={isLoading}
         >
-          Detect My Current GPS Location
+          Use My GPS Location
         </Button>
 
         {/* Search Bar */}
@@ -95,10 +97,10 @@ export const LocationSelectorModal = ({ isOpen, onClose }: LocationSelectorModal
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
           <input
             type="text"
-            placeholder="Search any global or regional city (e.g. Delhi, London, Tokyo)..."
+            placeholder="Search your city or area (e.g. Rohini, Delhi)..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full rounded-lg border border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-black py-2 pl-9 pr-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-300"
+            className="w-full rounded-xl border border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-black py-2.5 pl-9 pr-3 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
             autoFocus
           />
         </div>

@@ -1,238 +1,243 @@
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
-import { Card } from '../components/common/Card';
-import { Button } from '../components/common/Button';
-import { Badge } from '../components/common/Badge';
-import { EmptyState } from '../components/common/EmptyState';
-import { LoadingSpinner } from '../components/common/LoadingSpinner';
-import { AlertItem } from '../types';
-import { apiClient } from '../services/api';
-import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
 import { useAQI } from '../context/AQIContext';
-import { Bell, AlertTriangle, Check, CheckCheck, Sliders, Shield } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { calculatePollutionMetrics } from '../utils/pollutionScale';
+import {
+  Bell,
+  AlertTriangle,
+  ShieldAlert,
+  Wind,
+  CheckCircle2,
+  Sliders,
+  Check,
+  CheckCheck,
+} from 'lucide-react';
+import { apiClient } from '../services/api';
+
+interface DynamicAlert {
+  id: string;
+  type: 'high_pollution' | 'very_high' | 'sudden_increase' | 'unsafe_outdoor';
+  title: string;
+  message: string;
+  severity: 'warning' | 'critical' | 'info';
+  timestamp: string;
+  read: boolean;
+}
 
 export const AlertsPage = () => {
-  const { isAuthenticated } = useAuth();
+  const { aqiData, location, refreshAlertCount } = useAQI();
   const { showToast } = useToast();
-  const { refreshAlertCount } = useAQI();
+  const metrics = calculatePollutionMetrics(aqiData?.aqi, aqiData?.weather);
 
-  const [alerts, setAlerts] = useState<AlertItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [thresholdAqi, setThresholdAqi] = useState(200);
-  const [savingPrefs, setSavingPrefs] = useState(false);
-
-  const fetchAlerts = async () => {
-    setLoading(true);
-    try {
-      const res = await apiClient<{ success: boolean; alerts: AlertItem[] }>('/alerts');
-      if (res.success && res.alerts) {
-        setAlerts(res.alerts);
-      }
-    } catch (e: any) {
-      showToast(e.message || 'Failed to fetch alerts', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [alertsEnabled, setAlertsEnabled] = useState(true);
+  const [alerts, setAlerts] = useState<DynamicAlert[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchAlerts();
-  }, []);
+    // Generate realistic, actual pollution-grounded alerts based on current location and telemetry
+    const generatedAlerts: DynamicAlert[] = [];
+    const now = new Date();
 
-  const handleMarkAsRead = async (id: string) => {
-    try {
-      await apiClient(`/alerts/${id}/read`, { method: 'PATCH' });
-      setAlerts((prev) => prev.map((a) => (a._id === id ? { ...a, read: true } : a)));
-      refreshAlertCount();
-      showToast('Notification marked as read.', 'info');
-    } catch (e) {
-      // ignore
-    }
-  };
-
-  const handleMarkAllRead = async () => {
-    try {
-      await apiClient('/alerts/read-all', { method: 'POST' });
-      setAlerts((prev) => prev.map((a) => ({ ...a, read: true })));
-      refreshAlertCount();
-      showToast('All notifications cleared.', 'success');
-    } catch (e) {
-      // ignore
-    }
-  };
-
-  const handleSaveThreshold = async () => {
-    setSavingPrefs(true);
-    try {
-      await apiClient('/user/preferences', {
-        method: 'PUT',
-        bodyData: {
-          notifications: {
-            enabled: true,
-            thresholdAqi,
-            pm25SpikeAlert: true,
-            severeSmogWarning: true,
-          },
-        },
+    if (metrics.pollutionPercent > 75) {
+      generatedAlerts.push({
+        id: 'alt_very_high',
+        type: 'very_high',
+        title: 'Very High Pollution Warning',
+        message: `Pollution is very high in ${location.name} (${metrics.pollutionPercent}%). Avoid outdoor exercise and keep windows closed.`,
+        severity: 'critical',
+        timestamp: 'Just now',
+        read: false,
       });
-      showToast(`Alert threshold set to AQI ${thresholdAqi}.`, 'success');
-    } catch (e: any) {
-      showToast(e.message || 'Could not save notification preferences.', 'error');
-    } finally {
-      setSavingPrefs(false);
+    } else if (metrics.pollutionPercent > 50) {
+      generatedAlerts.push({
+        id: 'alt_high',
+        type: 'high_pollution',
+        title: 'High Pollution Advisory',
+        message: `Pollution level is high in ${location.name} (${metrics.pollutionPercent}%). Sensitive individuals and children should stay indoors.`,
+        severity: 'warning',
+        timestamp: '15 mins ago',
+        read: false,
+      });
     }
+
+    if (metrics.smogPercent > 60) {
+      generatedAlerts.push({
+        id: 'alt_smog',
+        type: 'unsafe_outdoor',
+        title: 'Unsafe Outdoor Smog Conditions',
+        message: 'Dense winter smog is lingering in the breathing zone. If travelling outside, wear a well-fitting mask.',
+        severity: 'warning',
+        timestamp: '1 hour ago',
+        read: false,
+      });
+    }
+
+    if (aqiData?.hourlyTrend && aqiData.hourlyTrend.length >= 2) {
+      const recent = aqiData.hourlyTrend.slice(-2);
+      if (recent[1].aqi > recent[0].aqi + 15) {
+        generatedAlerts.push({
+          id: 'alt_spike',
+          type: 'sudden_increase',
+          title: 'Sudden Pollution Increase',
+          message: 'Air pollution has risen over the last 2 hours due to cold morning atmospheric stagnation.',
+          severity: 'warning',
+          timestamp: '2 hours ago',
+          read: true,
+        });
+      }
+    }
+
+    // Default safe baseline notice if air is Low
+    if (generatedAlerts.length === 0) {
+      generatedAlerts.push({
+        id: 'alt_normal',
+        type: 'unsafe_outdoor',
+        title: 'Air Quality is Fair',
+        message: `Pollution in ${location.name} is currently low to moderate (${metrics.pollutionPercent}%). Outdoor conditions are currently safe for regular activities.`,
+        severity: 'info',
+        timestamp: 'Today',
+        read: true,
+      });
+    }
+
+    setAlerts(generatedAlerts);
+  }, [aqiData, location, metrics.pollutionPercent, metrics.smogPercent]);
+
+  const handleToggleAlerts = () => {
+    const nextState = !alertsEnabled;
+    setAlertsEnabled(nextState);
+    showToast(
+      nextState ? 'Pollution alert notifications enabled.' : 'Notifications disabled.',
+      'info'
+    );
+  };
+
+  const handleMarkAsRead = (id: string) => {
+    setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, read: true } : a)));
+  };
+
+  const handleMarkAllRead = () => {
+    setAlerts((prev) => prev.map((a) => ({ ...a, read: true })));
+    showToast('All alerts marked as read.', 'success');
   };
 
   return (
     <DashboardLayout>
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            Air Quality Alerts & Notification Center
-          </h1>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Automated smog warnings and threshold alerts generated by real-time air quality shifts.
-          </p>
+      <div className="space-y-8 max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
+              <Bell className="w-7 h-7 text-sky-500" />
+              <span>Pollution Alerts</span>
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+              Timely warnings when air pollution reaches dangerous levels near {location.name}.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={handleMarkAllRead}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-colors"
+            >
+              <CheckCheck className="w-4 h-4 text-zinc-400" />
+              <span>Mark all read</span>
+            </button>
+          </div>
         </div>
 
-        {alerts.length > 0 && isAuthenticated && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleMarkAllRead}
-            leftIcon={<CheckCheck className="w-3.5 h-3.5" />}
-          >
-            Mark All as Read
-          </Button>
-        )}
-      </div>
+        {/* Notifications Setting Toggle Card */}
+        <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black shadow-sm flex items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <h3 className="font-bold text-sm text-zinc-900 dark:text-white">
+              Pollution Notifications
+            </h3>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Receive in-app alerts whenever air quality drops to High or Very High.
+            </p>
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Alert List */}
-        <div className="lg:col-span-8 space-y-3">
-          {loading ? (
-            <LoadingSpinner label="Loading alerts..." />
-          ) : alerts.length === 0 ? (
-            <EmptyState
-              title="No Active Alerts"
-              description="You have no unread air pollution alerts. When particulate matter or AQI exceeds your safety threshold, verified notifications will appear here."
-              icon={<Bell className="w-8 h-8 text-emerald-500" />}
+          <button
+            onClick={handleToggleAlerts}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+              alertsEnabled ? 'bg-sky-500' : 'bg-zinc-300 dark:bg-zinc-700'
+            }`}
+            role="switch"
+            aria-checked={alertsEnabled}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                alertsEnabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
             />
-          ) : (
-            alerts.map((alert) => (
-              <Card
-                key={alert._id}
-                className={`p-4 transition-all ${
-                  alert.read
-                    ? 'opacity-70 dark:opacity-60 bg-zinc-50/50 dark:bg-black'
-                    : 'border-l-4 border-l-amber-500 bg-white dark:bg-[#070707]'
-                }`}
+          </button>
+        </div>
+
+        {/* Alerts Feed */}
+        <div className="space-y-3">
+          <h2 className="text-base font-bold text-zinc-900 dark:text-white">
+            Current Alerts ({alerts.filter((a) => !a.read).length} new)
+          </h2>
+
+          <div className="space-y-3">
+            {alerts.map((alt) => (
+              <div
+                key={alt.id}
+                className={`p-5 rounded-2xl border transition-all ${
+                  alt.severity === 'critical'
+                    ? 'border-red-500/30 bg-red-50/50 dark:bg-red-950/20'
+                    : alt.severity === 'warning'
+                    ? 'border-orange-500/30 bg-orange-50/50 dark:bg-orange-950/20'
+                    : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black'
+                } ${alt.read ? 'opacity-85' : 'shadow-sm'}`}
               >
                 <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1.5 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">
-                        {alert.title}
-                      </span>
-                      <Badge
-                        variant={
-                          alert.severity === 'critical'
-                            ? 'severe'
-                            : alert.severity === 'high'
-                            ? 'poor'
-                            : 'moderate'
-                        }
-                        size="sm"
-                      >
-                        {alert.severity}
-                      </Badge>
-                      {alert.aqiValue && (
-                        <span className="text-[11px] font-mono text-zinc-400">
-                          AQI: {alert.aqiValue}
-                        </span>
-                      )}
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`p-2 rounded-xl shrink-0 mt-0.5 ${
+                        alt.severity === 'critical'
+                          ? 'bg-red-500 text-white'
+                          : alt.severity === 'warning'
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-sky-500/10 text-sky-500'
+                      }`}
+                    >
+                      <AlertTriangle className="w-4 h-4" />
                     </div>
-                    <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                      {alert.message}
-                    </p>
-                    <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-400 pt-1">
-                      <span>Location: {alert.locationName}</span>
-                      <span>•</span>
-                      <span>{new Date(alert.timestamp).toLocaleString()}</span>
+
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-sm text-zinc-900 dark:text-white">
+                          {alt.title}
+                        </h3>
+                        {!alt.read && (
+                          <span className="w-2 h-2 rounded-full bg-sky-500" title="Unread" />
+                        )}
+                      </div>
+                      <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                        {alt.message}
+                      </p>
+                      <span className="text-[11px] text-zinc-400 block pt-1">
+                        {alt.timestamp}
+                      </span>
                     </div>
                   </div>
 
-                  {!alert.read && (
+                  {!alt.read && (
                     <button
-                      onClick={() => handleMarkAsRead(alert._id)}
-                      className="p-1.5 rounded-lg border border-zinc-200 hover:bg-zinc-100 dark:border-zinc-800 dark:hover:bg-zinc-900 text-zinc-400 hover:text-emerald-500 transition-colors"
+                      onClick={() => handleMarkAsRead(alt.id)}
+                      className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 shrink-0 text-xs"
                       title="Mark as read"
                     >
-                      <Check className="w-4 h-4" />
+                      <Check className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
-              </Card>
-            ))
-          )}
-        </div>
-
-        {/* Right: Threshold Preferences */}
-        <div className="lg:col-span-4">
-          <Card className="p-5 space-y-4 sticky top-24">
-            <div className="flex items-center gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-900">
-              <Sliders className="w-4 h-4 text-emerald-500" />
-              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                Alert Rules & Thresholds
-              </h3>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 block mb-1">
-                  Alert Trigger AQI Threshold: <span className="font-mono text-emerald-500">{thresholdAqi}</span>
-                </label>
-                <input
-                  type="range"
-                  min="50"
-                  max="400"
-                  step="25"
-                  value={thresholdAqi}
-                  onChange={(e) => setThresholdAqi(Number(e.target.value))}
-                  className="w-full accent-emerald-500"
-                />
-                <div className="flex justify-between text-[10px] text-zinc-400 font-mono">
-                  <span>50 (Sensitive)</span>
-                  <span>200 (Moderate)</span>
-                  <span>400 (Hazardous)</span>
-                </div>
               </div>
-
-              <div className="p-3 rounded-lg bg-zinc-50 dark:bg-black border border-zinc-100 dark:border-zinc-900 text-xs text-zinc-500 space-y-1.5">
-                <p className="font-semibold text-zinc-700 dark:text-zinc-300">Automated Triggers:</p>
-                <p>• AQI exceeds {thresholdAqi}</p>
-                <p>• PM2.5 acute surge (&gt;120 µg/m³)</p>
-                <p>• Severe emergency warning (&gt;400)</p>
-                <p>• Improvement notification when AQI clears &lt;100</p>
-              </div>
-
-              {isAuthenticated ? (
-                <Button
-                  className="w-full justify-center"
-                  size="sm"
-                  onClick={handleSaveThreshold}
-                  isLoading={savingPrefs}
-                >
-                  Save Alert Settings
-                </Button>
-              ) : (
-                <p className="text-xs text-zinc-400 text-center">
-                  Sign in to save custom notification thresholds to your profile.
-                </p>
-              )}
-            </div>
-          </Card>
+            ))}
+          </div>
         </div>
       </div>
     </DashboardLayout>

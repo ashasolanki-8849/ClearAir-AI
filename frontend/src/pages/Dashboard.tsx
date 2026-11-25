@@ -1,131 +1,318 @@
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAQI } from '../context/AQIContext';
 import { useAuth } from '../context/AuthContext';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
-import { AQIOverviewCard } from '../components/dashboard/AQIOverviewCard';
-import { PollutantCardGrid } from '../components/dashboard/PollutantCardGrid';
-import { WeatherCard } from '../components/dashboard/WeatherCard';
-import { AQITrendChart } from '../components/dashboard/AQITrendChart';
-import { PollutantComparisonChart } from '../components/dashboard/PollutantComparisonChart';
-import { HealthRiskCard } from '../components/dashboard/HealthRiskCard';
-import { AlertsWidget } from '../components/dashboard/AlertsWidget';
-import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { calculatePollutionMetrics } from '../utils/pollutionScale';
 import { LocationSelectorModal } from '../components/dashboard/LocationSelectorModal';
-import { Button } from '../components/common/Button';
-import { MapPin, RefreshCw, AlertCircle } from 'lucide-react';
+import {
+  Sparkles,
+  CloudFog,
+  Bell,
+  Navigation,
+  Calendar,
+  CheckCircle2,
+  Settings,
+  MapPin,
+  ArrowRight,
+  Send,
+  User,
+  ShieldCheck,
+  RefreshCw,
+} from 'lucide-react';
 
 export const Dashboard = () => {
-  const { aqiData, location, isLoading, error, refreshAQI } = useAQI();
+  const { aqiData, location, isLoading, refreshAQI } = useAQI();
   const { user } = useAuth();
   const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [quickQuestion, setQuickQuestion] = useState('');
+  const navigate = useNavigate();
 
-  // Time-aware greeting
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
+  const metrics = calculatePollutionMetrics(aqiData?.aqi, aqiData?.weather);
+
+  const samplePrompts = [
+    'Is it safe to go outside today?',
+    'What should I do in high pollution?',
+    'How can I protect my family from smog?',
+    'Should I exercise outside today?',
+    'How can I reduce pollution inside my home?',
+  ];
+
+  const handleAskAssistant = (promptText?: string) => {
+    const q = promptText || quickQuestion;
+    if (!q.trim()) return;
+    navigate('/assistant', { state: { initialQuery: q } });
   };
 
   return (
     <DashboardLayout>
-      {/* Dashboard Top Header */}
-      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-              {getGreeting()}
-              {user ? `, ${user.fullName.split(' ')[0]}` : ''}
-            </h1>
-            {user && (
-              <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800">
-                {user.userCategory.toUpperCase()}
-              </span>
-            )}
+      <div className="space-y-8 max-w-6xl mx-auto">
+        {/* Top Header Bar as strictly specified */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200 dark:border-zinc-800">
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white">
+                Hello{user?.fullName ? `, ${user.fullName.split(' ')[0]}` : '!'}
+              </h1>
+              {metrics.isDataAvailable && (
+                <span
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${metrics.badgeBg} ${metrics.borderColor} ${metrics.statusColor}`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${metrics.dotColor}`} />
+                  <span>Pollution: {metrics.pollutionPercent}% • {metrics.status}</span>
+                </span>
+              )}
+            </div>
+
+            {/* Current Location */}
+            <div className="flex items-center gap-2 mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+              <MapPin className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+              <span>Current location:</span>
+              <button
+                onClick={() => setLocationModalOpen(true)}
+                className="font-semibold text-zinc-800 dark:text-zinc-200 hover:text-sky-500 dark:hover:text-sky-400 hover:underline"
+              >
+                {location.name}
+              </button>
+            </div>
           </div>
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
-            <span>Monitoring:</span>
+
+          {/* Quick Icons: Refresh, Alerts, Profile */}
+          <div className="flex items-center gap-2 self-start sm:self-auto">
             <button
-              onClick={() => setLocationModalOpen(true)}
-              className="font-medium text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5"
+              onClick={refreshAQI}
+              disabled={isLoading}
+              className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-400 transition-colors"
+              title="Refresh readings"
             >
-              <MapPin className="w-3 h-3" />
-              {location.name}
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-sky-500' : ''}`} />
             </button>
-            <span className="text-zinc-300 dark:text-zinc-700">•</span>
-            <span>Real-time CPCB / Copernicus satellite feed</span>
-          </p>
+
+            <Link
+              to="/alerts"
+              className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-400 transition-colors"
+              title="Pollution Alerts"
+            >
+              <Bell className="w-4 h-4" />
+            </Link>
+
+            <Link
+              to="/profile"
+              className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-400 transition-colors"
+              title="Profile & Settings"
+            >
+              <User className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setLocationModalOpen(true)}
-            leftIcon={<MapPin className="w-3.5 h-3.5 text-emerald-500" />}
-          >
-            Change Location
-          </Button>
+        {/* FEATURE 2: LARGE, PROMINENT AI ASSISTANT SECTION NEAR TOP */}
+        <div className="p-6 sm:p-8 rounded-3xl border border-sky-200 dark:border-zinc-800 bg-sky-50/60 dark:bg-zinc-950 shadow-sm space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-sky-500 text-white shadow-md shadow-sky-500/20">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white">
+                  AI Assistant
+                </h2>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                  Ask any question about smog, outdoor safety, and protecting your family today.
+                </p>
+              </div>
+            </div>
 
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={refreshAQI}
-            isLoading={isLoading}
-            leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+            <Link
+              to="/assistant"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 dark:text-sky-400 hover:underline"
+            >
+              <span>Open Full Chat</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          {/* Quick Input Box */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleAskAssistant();
+            }}
+            className="flex gap-2"
           >
-            Refresh Readings
-          </Button>
+            <input
+              type="text"
+              value={quickQuestion}
+              onChange={(e) => setQuickQuestion(e.target.value)}
+              placeholder="e.g. Is it safe to go for a run this morning in my area?"
+              className="flex-1 px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black text-zinc-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm"
+            />
+            <button
+              type="submit"
+              className="px-5 py-3 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-xs sm:text-sm inline-flex items-center gap-2 shadow-sm transition-colors"
+            >
+              <span>Ask</span>
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
+
+          {/* Sample Prompts */}
+          <div>
+            <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 block mb-2">
+              Common questions you can ask:
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {samplePrompts.map((p, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleAskAssistant(p)}
+                  className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-400 dark:hover:border-sky-600 text-[11px] font-medium text-zinc-700 dark:text-zinc-300 transition-colors shadow-2xs"
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* THE 6 OTHER MAIN FEATURES IN A SIMPLE, CLEAN GRID */}
+        <div>
+          <h2 className="text-base font-bold text-zinc-900 dark:text-white mb-4">
+            Main Features
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {/* 1. Air Pollution */}
+            <Link
+              to="/pollution"
+              className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-400 dark:hover:border-sky-600 transition-all shadow-sm group space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-500 w-fit">
+                  <CloudFog className="w-5 h-5" />
+                </div>
+                <span className={`text-xs font-bold ${metrics.statusColor}`}>
+                  {metrics.pollutionPercent}% • {metrics.status}
+                </span>
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-sky-500 transition-colors">
+                  1. Air Pollution
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">
+                  Check current pollution and smog levels in percentage with an interactive area map.
+                </p>
+              </div>
+            </Link>
+
+            {/* 3. Alerts */}
+            <Link
+              to="/alerts"
+              className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-400 dark:hover:border-sky-600 transition-all shadow-sm group space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-500 w-fit">
+                  <Bell className="w-5 h-5" />
+                </div>
+                <span className="text-xs text-zinc-400">Live Notice</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-sky-500 transition-colors">
+                  3. Alerts
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">
+                  Receive alerts when pollution reaches dangerous or unhealthy thresholds near you.
+                </p>
+              </div>
+            </Link>
+
+            {/* 4. Smart Travel */}
+            <Link
+              to="/travel"
+              className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-400 dark:hover:border-sky-600 transition-all shadow-sm group space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-500 w-fit">
+                  <Navigation className="w-5 h-5" />
+                </div>
+                <span className="text-xs text-sky-500 font-medium">Route Planner</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-sky-500 transition-colors">
+                  4. Smart Travel
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">
+                  Find cleaner routes between your start location and destination to reduce exposure.
+                </p>
+              </div>
+            </Link>
+
+            {/* 5. Pollution Forecast */}
+            <Link
+              to="/forecast"
+              className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-400 dark:hover:border-sky-600 transition-all shadow-sm group space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-500 w-fit">
+                  <Calendar className="w-5 h-5" />
+                </div>
+                <span className="text-xs text-zinc-400">Next 7 Days</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-sky-500 transition-colors">
+                  5. Pollution Forecast
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">
+                  View simple day-by-day pollution percentages and a clean trend graph.
+                </p>
+              </div>
+            </Link>
+
+            {/* 6. What To Do */}
+            <Link
+              to="/what-to-do"
+              className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-400 dark:hover:border-sky-600 transition-all shadow-sm group space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-500 w-fit">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <span className="text-xs text-zinc-400">Daily Steps</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-sky-500 transition-colors">
+                  6. What To Do
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">
+                  Learn how to protect yourself indoors and outside, and how to reduce pollution.
+                </p>
+              </div>
+            </Link>
+
+            {/* 7. Profile & Settings */}
+            <Link
+              to="/profile"
+              className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-400 dark:hover:border-sky-600 transition-all shadow-sm group space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-500 w-fit">
+                  <Settings className="w-5 h-5" />
+                </div>
+                <span className="text-xs text-zinc-400">Settings</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-sky-500 transition-colors">
+                  7. Profile & Settings
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">
+                  Update your home location, notification settings, and switch between dark & light mode.
+                </p>
+              </div>
+            </Link>
+          </div>
         </div>
       </div>
-
-      {/* Main Content Area */}
-      {isLoading && !aqiData ? (
-        <LoadingSpinner label="Fetching live particulate telemetry & satellite observations..." size="lg" />
-      ) : error && !aqiData ? (
-        <div className="p-6 rounded-xl border border-red-500/30 bg-red-500/5 text-center space-y-3">
-          <AlertCircle className="w-8 h-8 text-red-500 mx-auto" />
-          <h3 className="text-sm font-bold text-red-500">Failed to Load Air Quality Telemetry</h3>
-          <p className="text-xs text-zinc-500">{error}</p>
-          <Button size="sm" onClick={refreshAQI}>
-            Retry Request
-          </Button>
-        </div>
-      ) : aqiData ? (
-        <div className="space-y-6">
-          {/* Section 1: Main Overview Card */}
-          <AQIOverviewCard
-            data={aqiData}
-            onRefresh={refreshAQI}
-            isLoading={isLoading}
-            onOpenLocationModal={() => setLocationModalOpen(true)}
-          />
-
-          {/* Section 2: Active Smog Alerts Widget */}
-          <AlertsWidget />
-
-          {/* Section 3: Health Risk Advisory Card */}
-          <HealthRiskCard
-            guidance={aqiData.healthGuidance}
-            category={aqiData.aqiCategory}
-            userCategory={user?.userCategory}
-          />
-
-          {/* Section 4: 24h Hourly Trend Area Chart */}
-          {aqiData.hourlyTrend && aqiData.hourlyTrend.length > 0 && (
-            <AQITrendChart data={aqiData.hourlyTrend} />
-          )}
-
-          {/* Section 5: Individual Pollutant Cards Grid */}
-          <PollutantCardGrid pollutants={aqiData.pollutants} />
-
-          {/* Section 6: Pollutant Comparison vs Safety Limits */}
-          <PollutantComparisonChart pollutants={aqiData.pollutants} />
-
-          {/* Section 7: Meteorological Conditions */}
-          <WeatherCard weather={aqiData.weather} />
-        </div>
-      ) : null}
 
       <LocationSelectorModal
         isOpen={locationModalOpen}
