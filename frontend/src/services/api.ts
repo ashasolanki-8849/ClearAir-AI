@@ -1,4 +1,7 @@
-export const API_BASE = '/api';
+const envApiUrl = (import.meta as any).env?.VITE_API_URL;
+export const API_BASE = envApiUrl
+  ? (envApiUrl.endsWith('/api') ? envApiUrl : `${envApiUrl.replace(/\/$/, '')}/api`)
+  : '/api';
 
 interface RequestOptions extends RequestInit {
   bodyData?: any;

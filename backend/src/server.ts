@@ -30,8 +30,13 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(
   cors({
-    origin: '*',
+    origin: (origin, callback) => {
+      // Dynamic origin reflection allows Vercel frontend, custom domains, and local development
+      callback(null, true);
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
 app.use(express.json());
@@ -44,12 +49,21 @@ app.use((req, _res, next) => {
   next();
 });
 
-// Health check
+// Root & Health check routes for Render monitoring
+app.get('/', (_req, res) => {
+  res.status(200).json({
+    status: 'online',
+    service: 'ClearAir AI Backend Server',
+    version: '1.0.0',
+    documentation: '/api/health',
+  });
+});
+
 app.get('/api/health', (_req, res) => {
   res.status(200).json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    service: 'ClearAir AI Backend - Module 1 Core',
+    service: 'ClearAir AI Backend',
     version: '1.0.0',
   });
 });
