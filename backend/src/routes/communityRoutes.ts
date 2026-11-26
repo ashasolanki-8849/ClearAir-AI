@@ -10,6 +10,10 @@ export const pollutionReportRouter = Router();
 
 // ================= /api/communities =================
 
+// Area Feed for Simple Community Hub
+communityRouter.get('/feed/posts', optionalAuth, controller.getAreaFeedPosts);
+communityRouter.post('/feed/posts', requireAuth, controller.createAreaPost);
+
 // Browse & Search Communities
 communityRouter.get('/', optionalAuth, controller.getCommunities);
 communityRouter.post('/', requireAuth, controller.createCommunity);

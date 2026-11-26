@@ -17,17 +17,49 @@ import {
   PanelLeft,
   RefreshCw,
   HelpCircle,
+  Mic,
+  MicOff,
+  UserCheck,
 } from 'lucide-react';
 
-const SUGGESTED_PROMPTS = [
-  'Is it safe to go outside today?',
-  'What should I do in high pollution?',
-  'How can I protect my family from smog?',
-  'Should I exercise outside today?',
-  'How can I reduce pollution inside my home?',
-  'What is the best time to travel?',
-  'How can I reduce my contribution to pollution?',
-];
+const ROLE_SUGGESTED_PROMPTS: Record<string, string[]> = {
+  general: [
+    'Is it safe to go outside today?',
+    'What should I do when pollution levels are high or severe?',
+    'How can I protect my family from winter smog?',
+    'Should I exercise or jog outdoors today?',
+    'How can I reduce pollution inside my home without purifiers?',
+    'What is the safest time to travel or run errands today?',
+  ],
+  student: [
+    'How can I commute safely to school or college during morning smog?',
+    'Should our school or campus avoid outdoor sports or morning assembly today?',
+    'How does severe winter smog impact study focus, energy, and fatigue?',
+    'Which mask should I wear when walking or riding a two-wheeler to campus?',
+    'What indoor air hacks keep a classroom or hostel room clean?',
+  ],
+  family: [
+    'How can I protect my children from winter smog today?',
+    'Is it safe for my kids or toddlers to play outside in the evening?',
+    'How do I seal bedroom windows without trapping stale cooking fumes?',
+    'What natural indoor hacks purify home air for elderly parents?',
+    'What warm home drinks relieve cough and throat dryness from smog?',
+  ],
+  working_professional: [
+    'What is the lowest-smog commuting window for office travel today?',
+    'Should I turn on internal air circulation in my car during traffic?',
+    'How can I reduce throat fatigue during long daily highway drives?',
+    'What simple indoor plants improve office desk air quality?',
+    'When is the safest time for an evening workout or gym session today?',
+  ],
+  elderly: [
+    'Is it safe for senior citizens to go for an early morning walk today?',
+    'What time of day is best for seniors to step outdoors for sunlight?',
+    'What gentle breathing exercises can be done safely inside our home?',
+    'How can we relieve throat dryness and coughing caused by winter smog?',
+    'Should seniors keep all bedroom doors and windows closed at night?',
+  ],
+};
 
 export const AssistantPage = () => {
   const { location, aqiData } = useAQI();
@@ -56,9 +88,76 @@ export const AssistantPage = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [loadingReply, setLoadingReply] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [selectedPromptRole, setSelectedPromptRole] = useState<string>(() => {
+    return user?.userCategory || 'general';
+  });
+
+  useEffect(() => {
+    if (user?.userCategory) {
+      setSelectedPromptRole(user.userCategory);
+    }
+  }, [user?.userCategory]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initialSentRef = useRef(false);
+  const recognitionRef = useRef<any>(null);
+
+  // Initialize Speech Recognition for Voice-based Chat
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = language === 'hi' ? 'hi-IN' : language === 'gu' ? 'gu-IN' : 'en-US';
+
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0])
+          .map((result: any) => result.transcript)
+          .join('');
+        setInputMessage(transcript);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.warn('Speech recognition error:', event.error);
+        setIsListening(false);
+        if (event.error === 'not-allowed') {
+          showToast('Microphone access was denied. Please allow microphone permissions in your browser.', 'warning');
+        } else {
+          showToast('Voice input stopped.', 'info');
+        }
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, [language, showToast]);
+
+  const toggleVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showToast('Voice input is not supported in this browser. Please type your question.', 'warning');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognitionRef.current?.start();
+        setIsListening(true);
+        showToast('Listening... Speak your question now.', 'info');
+      } catch (e) {
+        setIsListening(false);
+      }
+    }
+  };
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -236,8 +335,15 @@ export const AssistantPage = () => {
               </div>
             </div>
 
-            {/* Context location badge */}
-            <div className="flex items-center gap-2 text-xs">
+            {/* Context location badge & User Type badge */}
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              {user?.userCategory && (
+                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full border border-sky-200 dark:border-sky-900/40 bg-sky-50 dark:bg-sky-950/20 text-sky-700 dark:text-sky-300 font-medium">
+                  <UserCheck className="w-3.5 h-3.5" />
+                  <span className="capitalize">{user.userCategory} Guidance</span>
+                </div>
+              )}
+
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
                 <MapPin className="w-3.5 h-3.5 text-sky-500 shrink-0" />
                 <span className="text-zinc-700 dark:text-zinc-300 font-medium truncate max-w-[130px]">{location.name}</span>
@@ -268,22 +374,50 @@ export const AssistantPage = () => {
                   </p>
                 </div>
 
-                {/* Suggested Prompts */}
-                <div className="w-full space-y-2 text-left">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 block px-1">
-                    Suggested Questions:
-                  </span>
-                  <div className="grid grid-cols-1 gap-2">
-                    {SUGGESTED_PROMPTS.map((prompt, idx) => (
+                {/* Role Filter Tabs for Suggested Prompts */}
+                <div className="w-full space-y-2.5 text-left">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                      Suggested Questions by Category:
+                    </span>
+                  </div>
+
+                  {/* Category Pill Buttons */}
+                  <div className="flex flex-wrap gap-1.5 pb-1">
+                    {[
+                      { key: 'general', label: 'General' },
+                      { key: 'student', label: 'Student' },
+                      { key: 'family', label: 'Family' },
+                      { key: 'working_professional', label: 'Professional' },
+                      { key: 'elderly', label: 'Elderly' },
+                    ].map((tab) => (
                       <button
-                        key={idx}
-                        onClick={() => handleSendMessage(prompt)}
-                        className="w-full p-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-sky-400 dark:hover:border-sky-600 text-xs font-medium text-zinc-800 dark:text-zinc-200 text-left transition-colors flex items-center justify-between group shadow-2xs"
+                        key={tab.key}
+                        onClick={() => setSelectedPromptRole(tab.key)}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                          selectedPromptRole === tab.key
+                            ? 'bg-sky-500 text-white shadow-xs'
+                            : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                        }`}
                       >
-                        <span>{prompt}</span>
-                        <Send className="w-3.5 h-3.5 text-zinc-400 group-hover:text-sky-500 shrink-0" />
+                        {tab.label}
                       </button>
                     ))}
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2">
+                    {(ROLE_SUGGESTED_PROMPTS[selectedPromptRole] || ROLE_SUGGESTED_PROMPTS.general).map(
+                      (prompt, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleSendMessage(prompt)}
+                          className="w-full p-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-sky-400 dark:hover:border-sky-600 text-xs font-medium text-zinc-800 dark:text-zinc-200 text-left transition-colors flex items-center justify-between group shadow-2xs"
+                        >
+                          <span>{prompt}</span>
+                          <Send className="w-3.5 h-3.5 text-zinc-400 group-hover:text-sky-500 shrink-0" />
+                        </button>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
@@ -325,7 +459,7 @@ export const AssistantPage = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Bottom Chat Input Bar */}
+          {/* Bottom Chat Input Bar with Voice Input */}
           <div className="p-3 sm:p-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black">
             <form
               onSubmit={(e) => {
@@ -338,10 +472,30 @@ export const AssistantPage = () => {
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Ask about smog, outdoor safety, or protecting your home..."
+                placeholder={isListening ? 'Listening to your voice... Speak now' : 'Ask about smog, outdoor safety, or protecting your home...'}
                 disabled={loadingReply}
-                className="flex-1 px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-50"
+                className={`flex-1 px-4 py-3 rounded-2xl border text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-50 transition-all ${
+                  isListening
+                    ? 'border-sky-500 bg-sky-50/20 dark:bg-sky-950/20 ring-2 ring-sky-500/20 text-zinc-900 dark:text-white'
+                    : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white'
+                }`}
               />
+
+              {/* Microphone Voice Button */}
+              <button
+                type="button"
+                onClick={toggleVoiceInput}
+                disabled={loadingReply}
+                className={`p-3 rounded-2xl border transition-all ${
+                  isListening
+                    ? 'bg-red-500 border-red-500 text-white animate-pulse shadow-md'
+                    : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-300'
+                }`}
+                title={isListening ? 'Stop listening' : 'Speak your question (Voice Chat)'}
+              >
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-sky-500" />}
+              </button>
+
               <button
                 type="submit"
                 disabled={!inputMessage.trim() || loadingReply}

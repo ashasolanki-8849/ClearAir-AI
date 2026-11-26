@@ -1,5 +1,5 @@
 export type AgeGroup = 'under_18' | '18_35' | '36_60' | 'above_60';
-export type UserCategory = 'student' | 'professional' | 'family' | 'elderly' | 'community';
+export type UserCategory = 'student' | 'professional' | 'family' | 'elderly' | 'general' | 'community';
 
 export interface User {
   id: string;
@@ -133,6 +133,7 @@ export interface AIRecommendation {
 
 export interface StructuredAIResponse {
   summary: string;
+  is_off_topic?: boolean;
   current_conditions: {
     locationName: string;
     aqi: number | null;

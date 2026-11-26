@@ -18,6 +18,8 @@ import {
   Calendar,
   CheckCircle2,
   Settings,
+  Shield,
+  MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -25,7 +27,7 @@ import { useAQI } from '../../context/AQIContext';
 import { calculatePollutionMetrics } from '../../utils/pollutionScale';
 
 interface NavbarProps {
-  onOpenLocationModal: () => void;
+  onOpenLocationModal?: () => void;
 }
 
 export const Navbar = ({ onOpenLocationModal }: NavbarProps) => {
@@ -58,16 +60,13 @@ export const Navbar = ({ onOpenLocationModal }: NavbarProps) => {
             </span>
           </Link>
 
-          {/* Location Selector Pill */}
-          <button
-            onClick={onOpenLocationModal}
-            className="hidden sm:flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:border-zinc-300 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-200 dark:hover:border-zinc-700 transition-colors"
-            title="Change monitored location"
+          {/* Location Badge */}
+          <div
+            className="hidden sm:flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-semibold text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-200"
           >
             <MapPin className="h-3.5 w-3.5 text-sky-500 shrink-0" />
             <span className="max-w-[130px] truncate">{location.name}</span>
-            <ChevronDown className="h-3 w-3 text-zinc-400" />
-          </button>
+          </div>
 
           {/* Quick Pollution Percentage Badge */}
           {metrics.isDataAvailable && (
@@ -201,16 +200,10 @@ export const Navbar = ({ onOpenLocationModal }: NavbarProps) => {
       {mobileMenuOpen && (
         <div className="lg:hidden border-b border-zinc-200 bg-white px-4 py-4 dark:border-zinc-800 dark:bg-black">
           <div className="mb-3 flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-900">
-            <button
-              onClick={() => {
-                onOpenLocationModal();
-                setMobileMenuOpen(false);
-              }}
-              className="flex items-center gap-2 text-xs font-medium text-zinc-800 dark:text-zinc-200"
-            >
+            <div className="flex items-center gap-2 text-xs font-medium text-zinc-800 dark:text-zinc-200">
               <MapPin className="h-4 w-4 text-sky-500" />
               <span>Location: {location.name}</span>
-            </button>
+            </div>
             <span className={`text-xs font-bold ${metrics.statusColor}`}>
               {metrics.pollutionPercent}% {metrics.status}
             </span>

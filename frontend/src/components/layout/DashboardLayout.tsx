@@ -1,19 +1,16 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode } from 'react';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { Footer } from './Footer';
-import { LocationSelectorModal } from '../dashboard/LocationSelectorModal';
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-
   return (
     <div className="min-h-screen flex flex-col bg-white text-zinc-900 dark:bg-black dark:text-zinc-100 transition-colors">
-      <Navbar onOpenLocationModal={() => setIsLocationModalOpen(true)} />
+      <Navbar />
 
       <div className="flex-1 flex mx-auto w-full max-w-7xl">
         <Sidebar />
@@ -23,11 +20,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       </div>
 
       <Footer />
-
-      <LocationSelectorModal
-        isOpen={isLocationModalOpen}
-        onClose={() => setIsLocationModalOpen(false)}
-      />
     </div>
   );
 };

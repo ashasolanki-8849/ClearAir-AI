@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAQI } from '../context/AQIContext';
 import { useToast } from '../context/ToastContext';
-import { LocationSelectorModal } from '../components/dashboard/LocationSelectorModal';
 import {
   User,
   Sun,
@@ -29,6 +28,7 @@ export const ProfilePage = () => {
 
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [ageGroup, setAgeGroup] = useState(user?.ageGroup || '18_35');
+  const [userCategory, setUserCategory] = useState<any>(user?.userCategory || 'family');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('clearair_language') || 'en';
@@ -45,6 +45,7 @@ export const ProfilePage = () => {
       await updateUserProfile({
         fullName: fullName.trim(),
         ageGroup: ageGroup as any,
+        userCategory: userCategory as any,
       });
       showToast('Profile settings saved successfully.', 'success');
     } catch (e: any) {
@@ -115,20 +116,39 @@ export const ProfilePage = () => {
               </div>
             </div>
 
-            <div>
-              <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                Age Group
-              </label>
-              <select
-                value={ageGroup}
-                onChange={(e) => setAgeGroup(e.target.value as any)}
-                className="w-full sm:w-1/2 px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
-              >
-                <option value="under_18">Under 18 (Student)</option>
-                <option value="18_35">18 - 35 (Young Adult)</option>
-                <option value="36_60">36 - 60 (Adult / Parent)</option>
-                <option value="above_60">Above 60 (Senior Citizen)</option>
-              </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                  Age Group
+                </label>
+                <select
+                  value={ageGroup}
+                  onChange={(e) => setAgeGroup(e.target.value as any)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                >
+                  <option value="under_18">Under 18 (Student)</option>
+                  <option value="18_35">18 - 35 (Young Adult)</option>
+                  <option value="36_60">36 - 60 (Adult / Parent)</option>
+                  <option value="above_60">Above 60 (Senior Citizen)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                  User Type (Personalized Protection)
+                </label>
+                <select
+                  value={userCategory}
+                  onChange={(e) => setUserCategory(e.target.value as any)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                >
+                  <option value="student">Student (School & College Safety)</option>
+                  <option value="family">Family (Child & Elderly Care)</option>
+                  <option value="professional">Working Professional (Commute & Outdoor Work)</option>
+                  <option value="elderly">Elderly Person (Sensitive Health Precautions)</option>
+                  <option value="general">General User (Standard Guidance)</option>
+                </select>
+              </div>
             </div>
 
             <button
@@ -162,18 +182,23 @@ export const ProfilePage = () => {
             </button>
           </div>
 
-          <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-100 dark:border-zinc-900 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <MapPin className="w-4 h-4 text-sky-500" />
-              <span className="font-semibold text-zinc-900 dark:text-white">{location.name}</span>
+          <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-100 dark:border-zinc-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-sky-500" />
+                <span className="font-semibold text-zinc-900 dark:text-white text-sm">{location.name}</span>
+              </div>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                Coordinates: {location.lat.toFixed(4)}° N, {location.lon.toFixed(4)}° E
+              </p>
             </div>
 
             <button
               onClick={detectUserLocation}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-sky-500"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-sky-600 dark:text-sky-400 hover:border-sky-500 transition-colors self-start sm:self-auto"
             >
               <Compass className="w-3.5 h-3.5" />
-              <span>Re-detect GPS</span>
+              <span>Refresh GPS Location</span>
             </button>
           </div>
         </div>
@@ -277,11 +302,6 @@ export const ProfilePage = () => {
           </div>
         )}
       </div>
-
-      <LocationSelectorModal
-        isOpen={locationModalOpen}
-        onClose={() => setLocationModalOpen(false)}
-      />
     </DashboardLayout>
   );
 };

@@ -14,6 +14,7 @@ export interface IAIRecommendation {
 
 export interface IStructuredAIResponse {
   summary: string;
+  is_off_topic?: boolean;
   current_conditions: {
     locationName: string;
     aqi: number | null;

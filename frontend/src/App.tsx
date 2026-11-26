@@ -8,6 +8,9 @@ import { TravelPage } from './pages/TravelPage';
 import { ForecastPage } from './pages/ForecastPage';
 import { WhatToDoPage } from './pages/WhatToDoPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { FamilyPage } from './pages/FamilyPage';
+import { IndoorPage } from './pages/IndoorPage';
+import { CommunityPage } from './pages/CommunityPage';
 
 // Footer Pages
 import { ReviewsPage } from './pages/ReviewsPage';
@@ -28,7 +31,7 @@ export const App = () => {
       {/* Landing Page */}
       <Route path="/" element={<Home />} />
 
-      {/* Main 7 Dashboard Features */}
+      {/* Main Features */}
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/pollution" element={<AirPollutionPage />} />
       <Route path="/assistant" element={<AssistantPage />} />
@@ -36,6 +39,9 @@ export const App = () => {
       <Route path="/travel" element={<TravelPage />} />
       <Route path="/forecast" element={<ForecastPage />} />
       <Route path="/what-to-do" element={<WhatToDoPage />} />
+      <Route path="/family" element={<Navigate to="/what-to-do" replace />} />
+      <Route path="/indoor" element={<Navigate to="/what-to-do" replace />} />
+      <Route path="/community" element={<Navigate to="/what-to-do" replace />} />
       <Route path="/profile" element={<ProfilePage />} />
 
       {/* Footer Pages */}
@@ -53,9 +59,7 @@ export const App = () => {
       {/* Seamless redirects for previous legacy URLs */}
       <Route path="/pollutants" element={<Navigate to="/pollution" replace />} />
       <Route path="/planner" element={<Navigate to="/what-to-do" replace />} />
-      <Route path="/indoor" element={<Navigate to="/what-to-do" replace />} />
       <Route path="/sustainability" element={<Navigate to="/what-to-do" replace />} />
-      <Route path="/community" element={<Navigate to="/reviews" replace />} />
       <Route path="/impact" element={<Navigate to="/what-to-do" replace />} />
       <Route path="/simulator" element={<Navigate to="/pollution" replace />} />
       <Route path="/locations" element={<Navigate to="/profile" replace />} />

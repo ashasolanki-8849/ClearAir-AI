@@ -12,7 +12,7 @@
  * Never displays grams or scientific units to users.
  */
 
-export type PollutionStatus = 'Low' | 'Moderate' | 'High' | 'Very High';
+export type PollutionStatus = 'Low' | 'Moderate' | 'High' | 'Very High' | 'Extremely High';
 
 export interface PollutionMetrics {
   pollutionPercent: number; // 0 - 100%
@@ -72,7 +72,14 @@ export const calculatePollutionMetrics = (
   let dotColor = 'bg-sky-400';
   let shortAdvice = 'Air is clean and fresh. Perfect for outdoor activities and exercise.';
 
-  if (pollutionPercent > 75) {
+  if (pollutionPercent > 90) {
+    status = 'Extremely High';
+    statusColor = 'text-red-700 dark:text-red-500';
+    badgeBg = 'bg-red-900/20';
+    borderColor = 'border-red-800/40';
+    dotColor = 'bg-red-900';
+    shortAdvice = 'Hazardous winter smog emergency. Stay completely indoors and avoid all outdoor exposure.';
+  } else if (pollutionPercent > 75) {
     status = 'Very High';
     statusColor = 'text-red-500';
     badgeBg = 'bg-red-500/10';
@@ -114,13 +121,15 @@ export const calculatePollutionMetrics = (
 export const getStatusHexColor = (status: PollutionStatus): string => {
   switch (status) {
     case 'Low':
-      return '#0ea5e9'; // soft blue / sky
+      return '#0ea5e9'; // Blue (Low)
     case 'Moderate':
-      return '#eab308'; // yellow
+      return '#eab308'; // Yellow (Moderate)
     case 'High':
-      return '#f97316'; // orange
+      return '#f97316'; // Orange (High)
     case 'Very High':
-      return '#ef4444'; // red
+      return '#ef4444'; // Red (Very High)
+    case 'Extremely High':
+      return '#991b1b'; // Dark Red (Extremely High)
     default:
       return '#0ea5e9';
   }

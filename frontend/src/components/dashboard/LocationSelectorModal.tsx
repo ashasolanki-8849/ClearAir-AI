@@ -12,13 +12,14 @@ interface LocationSelectorModalProps {
 }
 
 const POPULAR_CITIES = [
+  { name: 'Gandhinagar', city: 'Gandhinagar', lat: 23.2156, lon: 72.6369, country: 'India' },
+  { name: 'Ahmedabad', city: 'Ahmedabad', lat: 23.0225, lon: 72.5714, country: 'India' },
   { name: 'New Delhi', city: 'Delhi', lat: 28.6139, lon: 77.2090, country: 'India' },
   { name: 'Mumbai', city: 'Mumbai', lat: 19.0760, lon: 72.8777, country: 'India' },
-  { name: 'Kolkata', city: 'Kolkata', lat: 22.5726, lon: 88.3639, country: 'India' },
   { name: 'Bengaluru', city: 'Bengaluru', lat: 12.9716, lon: 77.5946, country: 'India' },
+  { name: 'Kolkata', city: 'Kolkata', lat: 22.5726, lon: 88.3639, country: 'India' },
   { name: 'Chennai', city: 'Chennai', lat: 13.0827, lon: 80.2707, country: 'India' },
   { name: 'Hyderabad', city: 'Hyderabad', lat: 17.3850, lon: 78.4867, country: 'India' },
-  { name: 'Ahmedabad', city: 'Ahmedabad', lat: 23.0225, lon: 72.5714, country: 'India' },
   { name: 'Pune', city: 'Pune', lat: 18.5204, lon: 73.8567, country: 'India' },
   { name: 'Jaipur', city: 'Jaipur', lat: 26.9124, lon: 75.7873, country: 'India' },
   { name: 'Lucknow', city: 'Lucknow', lat: 26.8467, lon: 80.9462, country: 'India' },

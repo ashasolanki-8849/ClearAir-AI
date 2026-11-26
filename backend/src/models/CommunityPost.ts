@@ -10,10 +10,12 @@ export type PostCategory =
   | 'general';
 
 export interface ICommunityPost extends Document {
-  communityId: mongoose.Types.ObjectId;
+  communityId?: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
   authorName: string;
   authorRole: string;
+  city?: string;
+  areaName?: string;
   category: PostCategory;
   title: string;
   content: string;
@@ -44,8 +46,10 @@ const CommunityPostSchema = new Schema<ICommunityPost>(
     communityId: {
       type: Schema.Types.ObjectId,
       ref: 'Community',
-      required: true,
+      required: false,
     },
+    city: { type: String, default: 'General' },
+    areaName: { type: String, default: 'General' },
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',

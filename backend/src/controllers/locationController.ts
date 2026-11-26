@@ -1,7 +1,27 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/authMiddleware.js';
-import { searchLocations } from '../services/geocodingService.js';
+import { searchLocations, reverseGeocode } from '../services/geocodingService.js';
 import { Location } from '../models/Location.js';
+
+export const reverse = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const lat = parseFloat(req.query.lat as string);
+    const lon = parseFloat(req.query.lon as string);
+
+    if (isNaN(lat) || isNaN(lon)) {
+      res.status(400).json({ success: false, message: 'Valid latitude and longitude are required.' });
+      return;
+    }
+
+    const result = await reverseGeocode(lat, lon);
+    res.status(200).json({
+      success: true,
+      location: result,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 export const search = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {

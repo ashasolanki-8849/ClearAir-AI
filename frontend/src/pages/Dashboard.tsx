@@ -4,7 +4,6 @@ import { useAQI } from '../context/AQIContext';
 import { useAuth } from '../context/AuthContext';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { calculatePollutionMetrics } from '../utils/pollutionScale';
-import { LocationSelectorModal } from '../components/dashboard/LocationSelectorModal';
 import {
   Sparkles,
   CloudFog,
@@ -19,12 +18,15 @@ import {
   User,
   ShieldCheck,
   RefreshCw,
+  Users,
+  Home,
+  MessageSquare,
+  Map,
 } from 'lucide-react';
 
 export const Dashboard = () => {
   const { aqiData, location, isLoading, refreshAQI } = useAQI();
   const { user } = useAuth();
-  const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [quickQuestion, setQuickQuestion] = useState('');
   const navigate = useNavigate();
 
@@ -68,12 +70,9 @@ export const Dashboard = () => {
             <div className="flex items-center gap-2 mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
               <MapPin className="w-3.5 h-3.5 text-sky-500 shrink-0" />
               <span>Current location:</span>
-              <button
-                onClick={() => setLocationModalOpen(true)}
-                className="font-semibold text-zinc-800 dark:text-zinc-200 hover:text-sky-500 dark:hover:text-sky-400 hover:underline"
-              >
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200">
                 {location.name}
-              </button>
+              </span>
             </div>
           </div>
 
@@ -104,6 +103,66 @@ export const Dashboard = () => {
               <User className="w-4 h-4" />
             </Link>
           </div>
+        </div>
+
+        {/* QUICK ACTION BUTTONS */}
+        <div className="flex flex-wrap items-center gap-2.5 pt-1">
+          <Link
+            to="/pollution"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold shadow-sm transition-colors"
+          >
+            <CloudFog className="w-3.5 h-3.5" />
+            <span>Check Pollution</span>
+          </Link>
+          <Link
+            to="/assistant"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-500 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-2xs transition-colors"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-sky-500" />
+            <span>Ask AI</span>
+          </Link>
+          <Link
+            to="/pollution"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-500 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-2xs transition-colors"
+          >
+            <Map className="w-3.5 h-3.5 text-sky-500" />
+            <span>View Map</span>
+          </Link>
+          <Link
+            to="/travel"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-500 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-2xs transition-colors"
+          >
+            <Navigation className="w-3.5 h-3.5 text-sky-500" />
+            <span>Find Route</span>
+          </Link>
+          <Link
+            to="/forecast"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-500 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-2xs transition-colors"
+          >
+            <Calendar className="w-3.5 h-3.5 text-sky-500" />
+            <span>See Forecast</span>
+          </Link>
+          <Link
+            to="/family"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-500 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-2xs transition-colors"
+          >
+            <Users className="w-3.5 h-3.5 text-sky-500" />
+            <span>Protect My Family</span>
+          </Link>
+          <Link
+            to="/indoor"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-500 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-2xs transition-colors"
+          >
+            <Home className="w-3.5 h-3.5 text-sky-500" />
+            <span>Improve Indoor Air</span>
+          </Link>
+          <Link
+            to="/community"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-500 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-2xs transition-colors"
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-sky-500" />
+            <span>Community Hub</span>
+          </Link>
         </div>
 
         {/* FEATURE 2: LARGE, PROMINENT AI ASSISTANT SECTION NEAR TOP */}
@@ -176,7 +235,7 @@ export const Dashboard = () => {
           </div>
         </div>
 
-        {/* THE 6 OTHER MAIN FEATURES IN A SIMPLE, CLEAN GRID */}
+        {/* ALL MAIN FEATURES IN A SIMPLE, CLEAN GRID */}
         <div>
           <h2 className="text-base font-bold text-zinc-900 dark:text-white mb-4">
             Main Features
@@ -198,36 +257,78 @@ export const Dashboard = () => {
               </div>
               <div>
                 <h3 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-sky-500 transition-colors">
-                  1. Air Pollution
+                  Air Pollution
                 </h3>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">
-                  Check current pollution and smog levels in percentage with an interactive area map.
+                  Check current pollution and smog levels in percentage with an interactive zoom area map.
                 </p>
               </div>
             </Link>
 
-            {/* 3. Alerts */}
+            {/* 2. Family Protection */}
             <Link
-              to="/alerts"
+              to="/family"
               className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-400 dark:hover:border-sky-600 transition-all shadow-sm group space-y-3"
             >
               <div className="flex items-center justify-between">
                 <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-500 w-fit">
-                  <Bell className="w-5 h-5" />
+                  <Users className="w-5 h-5" />
                 </div>
-                <span className="text-xs text-zinc-400">Live Notice</span>
+                <span className="text-xs text-sky-500 font-semibold">Family Care</span>
               </div>
               <div>
                 <h3 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-sky-500 transition-colors">
-                  3. Alerts
+                  Family Protection
                 </h3>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">
-                  Receive alerts when pollution reaches dangerous or unhealthy thresholds near you.
+                  Easy and practical advice to protect children, adults, and elderly family members.
                 </p>
               </div>
             </Link>
 
-            {/* 4. Smart Travel */}
+            {/* 3. Indoor Air Guide */}
+            <Link
+              to="/indoor"
+              className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-400 dark:hover:border-sky-600 transition-all shadow-sm group space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-500 w-fit">
+                  <Home className="w-5 h-5" />
+                </div>
+                <span className="text-xs text-sky-500 font-semibold">Home Safety</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-sky-500 transition-colors">
+                  Indoor Air Quality Guide
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">
+                  Simple questions and steps to keep indoor spaces, bedrooms, and kitchens clean and safe.
+                </p>
+              </div>
+            </Link>
+
+            {/* 4. Community Hub */}
+            <Link
+              to="/community"
+              className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-400 dark:hover:border-sky-600 transition-all shadow-sm group space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-500 w-fit">
+                  <MessageSquare className="w-5 h-5" />
+                </div>
+                <span className="text-xs text-zinc-400">Neighborhood</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-sky-500 transition-colors">
+                  Community Hub
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">
+                  Share helpful tips with neighbors, read local updates, and view area activities.
+                </p>
+              </div>
+            </Link>
+
+            {/* 5. Smart Travel */}
             <Link
               to="/travel"
               className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-400 dark:hover:border-sky-600 transition-all shadow-sm group space-y-3"
@@ -240,7 +341,7 @@ export const Dashboard = () => {
               </div>
               <div>
                 <h3 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-sky-500 transition-colors">
-                  4. Smart Travel
+                  Smart Travel
                 </h3>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">
                   Find cleaner routes between your start location and destination to reduce exposure.
@@ -248,7 +349,7 @@ export const Dashboard = () => {
               </div>
             </Link>
 
-            {/* 5. Pollution Forecast */}
+            {/* 6. Pollution Forecast */}
             <Link
               to="/forecast"
               className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-400 dark:hover:border-sky-600 transition-all shadow-sm group space-y-3"
@@ -261,7 +362,7 @@ export const Dashboard = () => {
               </div>
               <div>
                 <h3 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-sky-500 transition-colors">
-                  5. Pollution Forecast
+                  Pollution Forecast
                 </h3>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">
                   View simple day-by-day pollution percentages and a clean trend graph.
@@ -269,7 +370,7 @@ export const Dashboard = () => {
               </div>
             </Link>
 
-            {/* 6. What To Do */}
+            {/* 7. What To Do */}
             <Link
               to="/what-to-do"
               className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-400 dark:hover:border-sky-600 transition-all shadow-sm group space-y-3"
@@ -282,7 +383,7 @@ export const Dashboard = () => {
               </div>
               <div>
                 <h3 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-sky-500 transition-colors">
-                  6. What To Do
+                  What To Do
                 </h3>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">
                   Learn how to protect yourself indoors and outside, and how to reduce pollution.
@@ -290,7 +391,28 @@ export const Dashboard = () => {
               </div>
             </Link>
 
-            {/* 7. Profile & Settings */}
+            {/* 8. Alerts */}
+            <Link
+              to="/alerts"
+              className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-400 dark:hover:border-sky-600 transition-all shadow-sm group space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-500 w-fit">
+                  <Bell className="w-5 h-5" />
+                </div>
+                <span className="text-xs text-zinc-400">Live Notice</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-sky-500 transition-colors">
+                  Alerts
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">
+                  Receive alerts when pollution reaches dangerous or unhealthy thresholds near you.
+                </p>
+              </div>
+            </Link>
+
+            {/* 9. Profile & Settings */}
             <Link
               to="/profile"
               className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:border-sky-400 dark:hover:border-sky-600 transition-all shadow-sm group space-y-3"
@@ -303,7 +425,7 @@ export const Dashboard = () => {
               </div>
               <div>
                 <h3 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-sky-500 transition-colors">
-                  7. Profile & Settings
+                  Profile & Settings
                 </h3>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">
                   Update your home location, notification settings, and switch between dark & light mode.
@@ -313,11 +435,6 @@ export const Dashboard = () => {
           </div>
         </div>
       </div>
-
-      <LocationSelectorModal
-        isOpen={locationModalOpen}
-        onClose={() => setLocationModalOpen(false)}
-      />
     </DashboardLayout>
   );
 };

@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export type AgeGroup = 'under_18' | '18_35' | '36_60' | 'above_60';
-export type UserCategory = 'student' | 'professional' | 'family' | 'elderly' | 'community';
+export type UserCategory = 'student' | 'professional' | 'family' | 'elderly' | 'general' | 'community';
 
 export interface IUser extends Document {
   fullName: string;
@@ -16,9 +16,12 @@ export interface IUser extends Document {
     lat: number;
     lon: number;
   };
+  loginAttempts: number;
+  lockUntil?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
+  isLocked: boolean;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -40,7 +43,7 @@ const UserSchema = new Schema<IUser>(
     password: {
       type: String,
       required: [true, 'Password is required'],
-      minlength: [6, 'Password must be at least 6 characters long'],
+      minlength: [8, 'Password must be at least 8 characters long'],
       select: false,
     },
     ageGroup: {
@@ -50,18 +53,26 @@ const UserSchema = new Schema<IUser>(
     },
     userCategory: {
       type: String,
-      enum: ['student', 'professional', 'family', 'elderly', 'community'],
-      default: 'professional',
+      enum: ['student', 'professional', 'family', 'elderly', 'general', 'community'],
+      default: 'general',
     },
     city: {
       type: String,
       required: [true, 'City is required'],
       trim: true,
+      default: 'Gandhinagar',
     },
     preferredLocation: {
-      name: { type: String, default: '' },
-      lat: { type: Number, default: 28.6139 },
-      lon: { type: Number, default: 77.2090 },
+      name: { type: String, default: 'Gandhinagar' },
+      lat: { type: Number, default: 23.2156 },
+      lon: { type: Number, default: 72.6369 },
+    },
+    loginAttempts: {
+      type: Number,
+      default: 0,
+    },
+    lockUntil: {
+      type: Date,
     },
   },
   {
@@ -69,13 +80,18 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
-// Hash password before saving
+// Virtual property to check if account is currently locked
+UserSchema.virtual('isLocked').get(function (this: IUser) {
+  return !!(this.lockUntil && this.lockUntil.getTime() > Date.now());
+});
+
+// Hash password with strong salt work factor (12 rounds) before saving
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password') || !this.password) {
     return next();
   }
   try {
-    const salt = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
     next();
   } catch (err: any) {
@@ -83,7 +99,7 @@ UserSchema.pre('save', async function (next) {
   }
 });
 
-// Method to verify password
+// Timing-safe password verification
 UserSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
   if (!this.password) return false;
   return bcrypt.compare(candidatePassword, this.password);

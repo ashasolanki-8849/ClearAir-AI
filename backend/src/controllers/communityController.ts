@@ -10,7 +10,59 @@ import * as communityAnalyticsService from '../services/communityAnalyticsServic
 import CommunityNotification from '../models/CommunityNotification.js';
 import CommunityAuditLog from '../models/CommunityAuditLog.js';
 import CommunityMember from '../models/CommunityMember.js';
+import CommunityPost from '../models/CommunityPost.js';
 import mongoose from 'mongoose';
+
+// ================= AREA FEED FOR GENERAL COMMUNITY =================
+
+export const getAreaFeedPosts = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { city, category } = req.query;
+    const filter: any = { isFlagged: false };
+    if (category && category !== 'all') {
+      filter.category = category;
+    }
+    if (city && city !== 'all') {
+      filter.$or = [
+        { city: new RegExp(city as string, 'i') },
+        { areaName: new RegExp(city as string, 'i') },
+      ];
+    }
+    const posts = await CommunityPost.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(50);
+    res.status(200).json({ success: true, posts });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const createAreaPost = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, message: 'Authentication required' });
+      return;
+    }
+    const { title, content, category, city, areaName } = req.body;
+    if (!title || !content) {
+      res.status(400).json({ success: false, message: 'Title and content are required' });
+      return;
+    }
+    const post = await CommunityPost.create({
+      userId: req.user.id,
+      authorName: req.user.fullName || 'Citizen',
+      authorRole: (req.user as any).userCategory || 'member',
+      title: title.trim(),
+      content: content.trim(),
+      category: category || 'general',
+      city: city || (req.user as any).city || 'Local Area',
+      areaName: areaName || 'Local Neighborhood',
+    });
+    res.status(201).json({ success: true, post });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
 
 // ================= COMMUNITIES =================
 

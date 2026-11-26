@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Wind, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
+import { Wind, Lock, Mail, ArrowRight, AlertCircle, Eye, EyeOff, ShieldAlert } from 'lucide-react';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,11 +27,14 @@ export const Login = () => {
       await login(email.trim(), password);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please verify your email and password.');
+      const msg = err.message || 'Login failed. Please verify your email and password.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
   };
+
+  const isLockoutError = error?.toLowerCase().includes('locked') || error?.toLowerCase().includes('failed attempts');
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-black py-12 transition-colors">
@@ -55,8 +59,18 @@ export const Login = () => {
 
         <div className="p-6 sm:p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black shadow-lg space-y-5">
           {error && (
-            <div className="p-3.5 rounded-xl border border-red-500/20 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div
+              className={`p-3.5 rounded-xl border text-xs flex items-center gap-2.5 ${
+                isLockoutError
+                  ? 'border-red-500 bg-red-100/80 dark:bg-red-950/40 text-red-700 dark:text-red-300 font-medium'
+                  : 'border-red-500/20 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400'
+              }`}
+            >
+              {isLockoutError ? (
+                <ShieldAlert className="w-4 h-4 shrink-0 text-red-600 dark:text-red-400" />
+              ) : (
+                <AlertCircle className="w-4 h-4 shrink-0" />
+              )}
               <span>{error}</span>
             </div>
           )}
@@ -94,13 +108,21 @@ export const Login = () => {
               <div className="relative">
                 <Lock className="absolute left-3.5 top-3 w-4 h-4 text-zinc-400" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 focus:outline-none"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 

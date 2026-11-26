@@ -1,10 +1,86 @@
 import { FullAssistantContext } from './contextBuilderService.js';
-import { IStructuredAIResponse, IAIRecommendation, SupportedLanguage } from '../models/Conversation.js';
+import { IStructuredAIResponse, IAIRecommendation, SupportedLanguage, IMessage } from '../models/Conversation.js';
+
+/**
+ * Validates whether a user's question is relevant to the ClearAir problem statement:
+ * Winter smog, urban air pollution, family health safety, safe travel, indoor air quality,
+ * low-emission daily routines, or today's air conditions.
+ */
+export const isRelevantAirSafetyQuestion = (query: string): boolean => {
+  if (!query || query.trim().length === 0) return true;
+  const q = query.trim().toLowerCase();
+
+  // Common friendly greetings, conversational continuity and follow-ups are acceptable
+  const conversationalStarters = [
+    'hi', 'hello', 'hey', 'namaste', 'kem cho', 'good morning', 'good afternoon', 'good evening',
+    'help', 'start', 'who are you', 'what can you do', 'what do you do', 'guide me',
+    'why', 'why is it', 'how', 'how so', 'tell me more', 'more', 'details', 'explain', 'explain more',
+    'what else', 'remedies', 'symptoms', 'precautions', 'tips', 'guide', 'yes', 'okay', 'sure'
+  ];
+  if (conversationalStarters.some((g) => q === g || q.startsWith(g + ' ') || q.endsWith(' ' + g))) {
+    return true;
+  }
+
+  // Explicit off-topic triggers (names, politics, programming, sports, movies, general trivia, etc.)
+  const offTopicTriggers = [
+    'modi', 'narendra modi', 'rahul gandhi', 'amit shah', 'kejrwal', 'bjp', 'congress', 'aap',
+    'minister', 'prime minister', 'president', 'chief minister', 'politician', 'election', 'party',
+    'who is', 'who was', 'biography of',
+    'code', 'coding', 'python', 'javascript', 'typescript', 'java', 'c++', 'html', 'css', 'react', 'sql', 'database', 'github', 'function',
+    'cricket', 'ipl', 'football', 'fifa', 'world cup', 'match score', 'messi', 'ronaldo', 'kohli', 'dhoni', 'rohit',
+    'cinema', 'bollywood', 'hollywood', 'movie', 'song', 'lyrics', 'actor', 'actress', 'film',
+    'recipe', 'cooking', 'bake', 'cake', 'pizza', 'burger', 'food recipe',
+    'capital of', 'math', 'algebra', 'solve equation', 'joke', 'tell me a joke', 'story', 'poem', 'game', 'gaming', 'bitcoin', 'crypto', 'stock market'
+  ];
+
+  // Specific air safety / ClearAir domain keywords
+  const airSafetyKeywords = [
+    'air', 'quality', 'aqi', 'smog', 'pollution', 'polluted', 'smoke', 'haze', 'dust', 'fog', 'inversion',
+    'pm2.5', 'pm10', 'pm', 'co2', 'no2', 'so2', 'ozone', 'particulate',
+    'breath', 'breathing', 'lung', 'lungs', 'throat', 'cough', 'asthma', 'heart', 'headache', 'chest', 'eye', 'eyes', 'irritat', 'allergy', 'sick', 'health', 'safe', 'safety', 'danger', 'risk',
+    'mask', 'n95', 'ffp2', 'purifier', 'hepa', 'plant', 'plants', 'window', 'windows', 'door', 'indoor', 'inside', 'outdoor', 'outside', 'home', 'house', 'room', 'ventilate', 'ventilation',
+    'walk', 'jog', 'run', 'exercise', 'gym', 'workout', 'cycling', 'cycle', 'play', 'sports', 'morning walk', 'evening walk',
+    'travel', 'route', 'commute', 'traffic', 'car', 'bus', 'metro', 'train', 'vehicle', 'ev', 'bike', 'scooter', 'cab', 'auto',
+    'student', 'school', 'college', 'exam', 'class', 'campus', 'child', 'children', 'kid', 'kids', 'baby', 'babies', 'elder', 'elderly', 'senior', 'parent', 'family', 'pregnant',
+    'routine', 'low-emission', 'sustainable', 'emission', 'clean', 'eco', 'winter', 'temperature', 'weather', 'wind', 'humidity',
+    'what should i do', 'what to do', 'how is the air', 'is it safe', 'can i go', 'today', 'forecast', 'advice', 'tips', 'recommend', 'protect',
+    'gandhinagar', 'ahmedabad', 'delhi', 'mumbai', 'india'
+  ];
+
+  const hasOffTopic = offTopicTriggers.some((t) => {
+    if (t.includes(' ')) {
+      return q.includes(t);
+    }
+    const escaped = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+    return regex.test(q);
+  });
+
+  const hasAirSafety = airSafetyKeywords.some((k) => {
+    if (k.includes(' ') || k.includes('.')) {
+      return q.includes(k);
+    }
+    const escaped = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+    return regex.test(q);
+  });
+
+  if (hasOffTopic && !hasAirSafety) {
+    return false;
+  }
+
+  if (!hasAirSafety) {
+    return false;
+  }
+
+  return true;
+};
 
 export const generateIntelligentRecommendations = (
   userMessage: string,
   context: FullAssistantContext,
-  language: SupportedLanguage = 'en'
+  language: SupportedLanguage = 'en',
+  previousMessages: IMessage[] = []
 ): IStructuredAIResponse => {
   const { environmental: env, user } = context;
   const aqi = env.aqi;
@@ -17,6 +93,47 @@ export const generateIntelligentRecommendations = (
   const isPoor = (aqi >= 201 && aqi <= 300) || aqiCat === 'Poor';
   const isModerate = (aqi >= 101 && aqi <= 200) || aqiCat === 'Moderate';
   const isUnhealthy = aqi > 200;
+
+  // 1. Check domain relevance: if query is a follow-up in an ongoing conversation, accept it
+  const isFollowUp = previousMessages && previousMessages.length > 0;
+  if (!isFollowUp && !isRelevantAirSafetyQuestion(userMessage)) {
+    return {
+      is_off_topic: true,
+      summary:
+        language === 'hi'
+          ? 'मैं केवल वायु प्रदूषण, सर्दियों के स्मॉग, वायु गुणवत्ता और स्वास्थ्य सुरक्षा से जुड़े प्रश्नों का उत्तर दे सकता हूँ। आपका प्रश्न इस विषय से बाहर है। कृपया वायु प्रदूषण या सुरक्षा से संबंधित कोई मान्य प्रश्न पूछें!'
+          : language === 'gu'
+          ? 'હું માત્ર વાયુ પ્રદૂષણ, શિયાળાના સ્મોગ, હવાની ગુણવત્તા અને સ્વાસ્થ્ય સુરક્ષા સંબંધિત પ્રશ્નોના જવાબો આપું છું. તમારો પ્રશ્ન આ વિષય બહારનો છે. કૃપા કરીને વાયુ પ્રદૂષણ કે વાયુ સુરક્ષાને લગતો કોઈ માન્ય પ્રશ્ન પૂછો!'
+          : 'I am ClearAir\'s dedicated Air Safety Assistant. I specialize exclusively in urban air pollution, winter smog, family health safety, safe travel, and low-emission daily routines. Your question appears to be outside of this scope.\n\nPlease ask a valid questionnaire or inquiry related to today\'s air quality, smog protection, indoor air hacks, or safe outdoor routines!',
+      current_conditions: {
+        locationName: location,
+        aqi,
+        category: aqiCat,
+        dominant_pollutant: env.dominantPollutant,
+        pm25,
+        pm10: env.pollutants.pm10,
+        temperature: env.weather.temperature,
+        data_timestamp: env.lastUpdated,
+        is_live: !env.isDemo,
+      },
+      risk_level: aqiCat,
+      user_context_applied: {
+        category: userCat,
+        age_group: user.ageGroup,
+      },
+      recommendations: [],
+      alternatives: [],
+      limitations: [
+        'ClearAir AI Assistant operates exclusively within urban air quality, winter smog, and health safety.',
+      ],
+      follow_up_questions: [
+        language === 'hi' ? 'आज गांधीनगर में वायु गुणवत्ता (AQI) कैसी है?' : language === 'gu' ? 'આજે ગાંધીનગરમાં હવાની ગુણવત્તા (AQI) કેવી છે?' : "How is today's air quality in Gandhinagar?",
+        language === 'hi' ? 'क्या आज सुबह टहलने जाना सुरक्षित है?' : language === 'gu' ? 'શું આજે સવારે મોર્નિંગ વોક પર જવું સુરક્ષિત છે?' : 'Is it safe to go for a morning walk today?',
+        language === 'hi' ? 'घर की हवा को साफ रखने के आसान उपाय क्या हैं?' : language === 'gu' ? 'ઘરની હવાને સ્વચ્છ રાખવા માટેના સરળ ઉપાયો શું છે?' : 'What are simple hacks to keep indoor air clean?',
+        language === 'hi' ? 'स्मॉग से बचने के लिए कौन सा मास्क सबसे अच्छा है?' : language === 'gu' ? 'સ્મોગથી બચવા માટે કયો માસ્ક શ્રેષ્ઠ છે?' : 'Which mask is best for winter smog protection?',
+      ],
+    };
+  }
 
   const lowerMsg = userMessage.toLowerCase();
 

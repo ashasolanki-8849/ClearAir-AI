@@ -15,12 +15,9 @@ import { Footer } from '../components/layout/Footer';
 import { CitySmogVisual } from '../components/common/CitySmogVisual';
 import { useAQI } from '../context/AQIContext';
 import { calculatePollutionMetrics } from '../utils/pollutionScale';
-import { useState } from 'react';
-import { LocationSelectorModal } from '../components/dashboard/LocationSelectorModal';
 
 export const Home = () => {
   const { location, aqiData } = useAQI();
-  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const metrics = calculatePollutionMetrics(aqiData?.aqi, aqiData?.weather);
 
   const features = [
@@ -32,39 +29,39 @@ export const Home = () => {
     },
     {
       icon: Sparkles,
-      title: 'Ask the AI assistant',
-      description: 'Get immediate, friendly advice in simple English on how to protect your family.',
+      title: 'Ask the AI assistant for advice',
+      description: 'Get immediate, friendly advice in simple English and voice chat on how to protect yourself and your family.',
       link: '/assistant',
     },
     {
       icon: Bell,
       title: 'Receive pollution alerts',
-      description: 'Know when air quality becomes unsafe or when smog spikes suddenly.',
+      description: 'Get clear, timely notifications when smog spikes or sudden winter inversions occur.',
       link: '/alerts',
     },
     {
       icon: Navigation,
       title: 'Plan safer travel',
-      description: 'Find lower-pollution travel routes to avoid breathing heavy roadside exhaust.',
+      description: 'Find lower-pollution travel routes and optimal timing to avoid breathing heavy roadside exhaust.',
       link: '/travel',
     },
     {
       icon: Calendar,
-      title: 'Check pollution forecast',
+      title: 'Check the pollution forecast',
       description: 'See simple day-by-day pollution predictions to plan your week ahead safely.',
       link: '/forecast',
     },
     {
       icon: CheckCircle2,
       title: 'Learn what actions to take',
-      description: 'Simple everyday steps to keep indoor air clean and reduce personal smog exposure.',
+      description: 'Simple everyday routines, indoor air hacks, and sustainable low-emission choices tailored to you.',
       link: '/what-to-do',
     },
   ];
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-zinc-900 dark:bg-black dark:text-zinc-100 transition-colors">
-      <Navbar onOpenLocationModal={() => setIsLocationModalOpen(true)} />
+      <Navbar />
 
       <main className="flex-1">
         {/* Hero Section */}
@@ -84,8 +81,8 @@ export const Home = () => {
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-white leading-[1.15]">
-                Know Your Air. <br />
-                <span className="text-sky-500">Stay Safe.</span>
+                Check pollution near you. <br />
+                <span className="text-sky-500">Understand the air. Stay safe.</span>
               </h1>
 
               <p className="text-base sm:text-lg text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto lg:mx-0 leading-relaxed">
@@ -119,7 +116,11 @@ export const Home = () => {
 
             {/* Right Column: Realistic Visual */}
             <div className="flex justify-center">
-              <CitySmogVisual />
+              <CitySmogVisual
+                locationName={location.name}
+                pollutionPercent={metrics.pollutionPercent}
+                status={metrics.status}
+              />
             </div>
           </div>
         </section>
@@ -164,11 +165,6 @@ export const Home = () => {
       </main>
 
       <Footer />
-
-      <LocationSelectorModal
-        isOpen={isLocationModalOpen}
-        onClose={() => setIsLocationModalOpen(false)}
-      />
     </div>
   );
 };

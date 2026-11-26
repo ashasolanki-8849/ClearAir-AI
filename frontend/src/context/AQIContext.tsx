@@ -17,6 +17,7 @@ interface AQIContextType {
   isLoading: boolean;
   error: string | null;
   unreadAlertCount: number;
+  lastUpdatedTime: string;
   setLocation: (loc: LocationCoordinates) => void;
   refreshAQI: () => Promise<void>;
   detectUserLocation: () => Promise<void>;
@@ -24,10 +25,10 @@ interface AQIContextType {
 }
 
 const DEFAULT_LOCATION: LocationCoordinates = {
-  name: 'New Delhi',
-  city: 'Delhi',
-  lat: 28.6139,
-  lon: 77.2090,
+  name: 'Gandhinagar',
+  city: 'Gandhinagar',
+  lat: 23.2156,
+  lon: 72.6369,
 };
 
 const AQIContext = createContext<AQIContextType | undefined>(undefined);
@@ -40,7 +41,14 @@ export const AQIProvider = ({ children }: { children: ReactNode }) => {
     const saved = localStorage.getItem('clearair_active_location');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Migration: If cached location was Gandhinagar with Delhi coordinates (28.6139), fix to Gandhinagar (23.2156, 72.6369)
+        if (parsed.name === 'Gandhinagar' && Math.abs(parsed.lat - 28.6139) < 0.1) {
+          parsed.lat = 23.2156;
+          parsed.lon = 72.6369;
+          localStorage.setItem('clearair_active_location', JSON.stringify(parsed));
+        }
+        return parsed;
       } catch (e) {
         // ignore
       }
@@ -52,6 +60,9 @@ export const AQIProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [unreadAlertCount, setUnreadAlertCount] = useState<number>(0);
+  const [lastUpdatedTime, setLastUpdatedTime] = useState<string>(() =>
+    new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  );
 
   // Sync with user's preferred location on login
   useEffect(() => {
@@ -82,6 +93,7 @@ export const AQIProvider = ({ children }: { children: ReactNode }) => {
       const response = await apiClient<{ success: boolean; data: AQIData }>(`/air-quality/current?${queryParams.toString()}`);
       if (response.success && response.data) {
         setAqiData(response.data);
+        setLastUpdatedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       }
     } catch (err: any) {
       console.error('AQI fetch error:', err);
@@ -137,47 +149,72 @@ export const AQIProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    showToast('Detecting your GPS location...', 'info');
+    showToast('Detecting your accurate location...', 'info');
     setIsLoading(true);
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        let detectedName = 'Your GPS Location';
+        let detectedName = 'Current Location';
+        let detectedCity = 'Current Area';
 
         try {
-          // Attempt reverse geocoding via Open-Meteo
-          const geoRes = await fetch(
-            `https://geocoding-api.open-meteo.com/v1/search?name=${latitude.toFixed(2)},${longitude.toFixed(2)}&count=1`
+          // Attempt high-precision reverse geocode from backend
+          const res = await apiClient<{ success: boolean; location: { name: string; city: string } }>(
+            `/locations/reverse?lat=${latitude}&lon=${longitude}`
           );
-          const geoData = await geoRes.json();
-          if (geoData?.results?.[0]?.name) {
-            detectedName = geoData.results[0].name;
+          if (res.success && res.location) {
+            detectedName = res.location.name;
+            detectedCity = res.location.city;
           }
         } catch (e) {
-          // Fallback to coordinates label
-          detectedName = `Local (${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°)`;
+          try {
+            // Client-side fallback to BigDataCloud
+            const bdcRes = await fetch(
+              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+            );
+            const data = await bdcRes.json();
+            if (data?.city || data?.locality) {
+              detectedCity = data.city || data.locality;
+              detectedName = data.locality && data.locality !== data.city ? `${data.locality}, ${detectedCity}` : detectedCity;
+            }
+          } catch (err) {
+            detectedName = `Area (${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°)`;
+          }
         }
 
         const newLoc: LocationCoordinates = {
           name: detectedName,
-          city: detectedName,
+          city: detectedCity,
           lat: latitude,
           lon: longitude,
         };
 
         setLocation(newLoc);
-        showToast(`GPS location detected: ${detectedName}`, 'success');
+        setLastUpdatedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        showToast(`Location confirmed: ${detectedName}`, 'success');
+
+        // Save selected location in MongoDB in background
+        apiClient('/locations/save', {
+          method: 'POST',
+          bodyData: {
+            name: detectedName,
+            city: detectedCity,
+            lat: latitude,
+            lon: longitude,
+            isDefault: true,
+          },
+        }).catch(() => {});
       },
       (geoError) => {
         setIsLoading(false);
-        let errorMsg = 'Could not access GPS location.';
+        let errorMsg = 'We could not find your location. Please select it manually.';
         if (geoError.code === geoError.PERMISSION_DENIED) {
-          errorMsg = 'Location permission was denied. You can select your city manually.';
+          errorMsg = 'Location access is off. Select your location manually.';
         }
         showToast(errorMsg, 'warning');
       },
-      { timeout: 10000, enableHighAccuracy: true }
+      { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
     );
   };
 
@@ -189,6 +226,7 @@ export const AQIProvider = ({ children }: { children: ReactNode }) => {
         isLoading,
         error,
         unreadAlertCount,
+        lastUpdatedTime,
         setLocation,
         refreshAQI,
         detectUserLocation,
