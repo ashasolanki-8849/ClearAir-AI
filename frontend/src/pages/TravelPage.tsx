@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { InteractiveRouteMap } from '../components/travel/InteractiveRouteMap';
 import { travelService } from '../services/travelService';
+import { apiClient } from '../services/api';
 import { useAQI } from '../context/AQIContext';
 import { calculatePollutionMetrics } from '../utils/pollutionScale';
 import {
@@ -13,6 +14,7 @@ import {
   Search,
   CheckCircle2,
   Info,
+  AlertCircle,
 } from 'lucide-react';
 import { RouteAlternativeData } from '../types';
 
@@ -20,16 +22,25 @@ export const TravelPage: React.FC = () => {
   const { location, aqiData } = useAQI();
   const metrics = calculatePollutionMetrics(aqiData?.aqi);
 
-  const [startLocation, setStartLocation] = useState(location.name || 'Connaught Place, New Delhi');
-  const [destination, setDestination] = useState('Noida Sector 62, Uttar Pradesh');
+  const [startLocation, setStartLocation] = useState(location.name || 'Gandhinagar, Gujarat');
+  const [destination, setDestination] = useState('Ahmedabad Airport, Gujarat');
 
-  const [originCoords, setOriginCoords] = useState({ lat: location.lat || 28.6139, lon: location.lon || 77.2090, name: location.name });
-  const [destCoords, setDestCoords] = useState({ lat: 28.6280, lon: 77.3649, name: 'Noida Sector 62' });
+  const [originCoords, setOriginCoords] = useState({ lat: location.lat || 23.2156, lon: location.lon || 72.6369, name: location.name || 'Gandhinagar' });
+  const [destCoords, setDestCoords] = useState({ lat: 23.0734, lon: 72.6266, name: 'Ahmedabad Airport' });
 
   const [routes, setRoutes] = useState<RouteAlternativeData[]>([]);
   const [selectedRouteId, setSelectedRouteId] = useState<string>('');
   const [searching, setSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  // Sync initial location when GPS/context updates
+  useEffect(() => {
+    if (location.name) {
+      setStartLocation(location.name);
+      setOriginCoords({ lat: location.lat, lon: location.lon, name: location.name });
+    }
+  }, [location]);
 
   // Initial Route Search
   useEffect(() => {
@@ -40,13 +51,57 @@ export const TravelPage: React.FC = () => {
     if (e) e.preventDefault();
     if (!startLocation.trim() || !destination.trim()) return;
 
-    try {
-      setSearching(true);
-      setHasSearched(true);
+    setSearchError(null);
+    setSearching(true);
+    setHasSearched(true);
 
+    try {
+      // 1. Dynamically Geocode Destination via Map Model / Geocoding Service
+      let currentDest = destCoords;
+      try {
+        const destRes = await apiClient<{
+          success: boolean;
+          locations: Array<{ name: string; latitude: number; longitude: number }>;
+        }>(`/locations/search?q=${encodeURIComponent(destination.trim())}`);
+
+        if (destRes.success && destRes.locations && destRes.locations.length > 0) {
+          const match = destRes.locations[0];
+          currentDest = { lat: match.latitude, lon: match.longitude, name: match.name };
+          setDestCoords(currentDest);
+        } else {
+          setSearchError(`Could not find destination "${destination}". Please enter a valid destination name (e.g. city, landmark, or area).`);
+          setSearching(false);
+          return;
+        }
+      } catch (destErr) {
+        setSearchError(`Unable to locate "${destination}". Please enter a valid destination in the map.`);
+        setSearching(false);
+        return;
+      }
+
+      // 2. Dynamically Geocode Start Location if modified
+      let currentOrigin = originCoords;
+      if (startLocation.trim().toLowerCase() !== (originCoords.name || '').toLowerCase()) {
+        try {
+          const origRes = await apiClient<{
+            success: boolean;
+            locations: Array<{ name: string; latitude: number; longitude: number }>;
+          }>(`/locations/search?q=${encodeURIComponent(startLocation.trim())}`);
+
+          if (origRes.success && origRes.locations && origRes.locations.length > 0) {
+            const match = origRes.locations[0];
+            currentOrigin = { lat: match.latitude, lon: match.longitude, name: match.name };
+            setOriginCoords(currentOrigin);
+          }
+        } catch (origErr) {
+          // Keep current originCoords if lookup falls through
+        }
+      }
+
+      // 3. Search routes with real dynamic coordinates
       const res = await travelService.searchRoutes({
-        origin: { lat: originCoords.lat, lon: originCoords.lon, name: startLocation },
-        destination: { lat: destCoords.lat, lon: destCoords.lon, name: destination },
+        origin: { lat: currentOrigin.lat, lon: currentOrigin.lon, name: startLocation },
+        destination: { lat: currentDest.lat, lon: currentDest.lon, name: currentDest.name || destination },
         preferredMode: 'car',
         priority: 'balanced',
       });
@@ -54,9 +109,12 @@ export const TravelPage: React.FC = () => {
       if (res.success && res.routes && res.routes.length > 0) {
         setRoutes(res.routes);
         setSelectedRouteId(res.routes[0].routeId);
+      } else {
+        setSearchError('No driving routes could be computed between these points. Please choose closer destinations or verify locations.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Route search error:', err);
+      setSearchError(err.message || 'Route search failed. Please verify your destination.');
     } finally {
       setSearching(false);
     }
@@ -83,7 +141,14 @@ export const TravelPage: React.FC = () => {
         </div>
 
         {/* Simple Input Form */}
-        <div className="p-5 sm:p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black shadow-sm">
+        <div className="p-5 sm:p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black shadow-sm space-y-4">
+          {searchError && (
+            <div className="p-3.5 rounded-2xl border border-red-500/20 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 text-xs flex items-center gap-2.5 animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span className="font-medium">{searchError}</span>
+            </div>
+          )}
+
           <form onSubmit={handleSearchRoutes} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
               <div>
@@ -224,8 +289,8 @@ export const TravelPage: React.FC = () => {
             {/* Route Map */}
             <div className="rounded-3xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm h-[400px]">
               <InteractiveRouteMap
-                origin={{ lat: originCoords.lat, lon: originCoords.lon, name: startLocation }}
-                destination={{ lat: destCoords.lat, lon: destCoords.lon, name: destination }}
+                origin={{ lat: originCoords.lat, lon: originCoords.lon, name: originCoords.name || startLocation }}
+                destination={{ lat: destCoords.lat, lon: destCoords.lon, name: destCoords.name || destination }}
                 routes={routes}
                 selectedRouteId={selectedRouteId}
                 onSelectRoute={(id) => setSelectedRouteId(id)}

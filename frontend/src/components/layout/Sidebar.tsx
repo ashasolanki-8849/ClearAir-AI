@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Settings,
   LayoutDashboard,
+  Users,
 } from 'lucide-react';
 import { useAQI } from '../../context/AQIContext';
 import { calculatePollutionMetrics } from '../../utils/pollutionScale';
@@ -54,6 +55,11 @@ export const Sidebar = () => {
       name: 'What To Do',
       path: '/what-to-do',
       icon: CheckCircle2,
+    },
+    {
+      name: 'Community',
+      path: '/community',
+      icon: Users,
     },
     {
       name: 'Profile & Settings',

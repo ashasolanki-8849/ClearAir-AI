@@ -11,6 +11,7 @@ import { evaluateTravelExposure } from '../services/travelExposureService.js';
 import { evaluateDepartureTimeWindows } from '../services/travelTimeAdvisorService.js';
 import { analyzeAndRankRoutes } from '../services/travelRecommendationService.js';
 import { fetchRealtimeAQI } from '../services/aqiService.js';
+import { searchLocations } from '../services/geocodingService.js';
 import axios from 'axios';
 
 // ==========================================
@@ -20,11 +21,41 @@ import axios from 'axios';
 export const searchRoutes = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-    const { origin, destination, preferredMode, priority = 'balanced', userCategory } = req.body;
+    let { origin, destination, preferredMode, priority = 'balanced', userCategory } = req.body;
 
-    if (!origin || !destination || origin.lat == null || destination.lat == null) {
-      res.status(400).json({ success: false, message: 'Origin and destination coordinates are required' });
+    if (!origin || !destination) {
+      res.status(400).json({ success: false, message: 'Both origin and destination are required.' });
       return;
+    }
+
+    // Resolve Origin coordinates dynamically if missing or incomplete
+    if (origin.lat == null || origin.lon == null) {
+      const oQuery = typeof origin === 'string' ? origin : origin.name;
+      const oMatches = await searchLocations(oQuery);
+      if (oMatches && oMatches.length > 0) {
+        origin = { lat: oMatches[0].latitude, lon: oMatches[0].longitude, name: oMatches[0].name };
+      } else {
+        res.status(400).json({
+          success: false,
+          message: `Could not locate starting point "${oQuery}". Please enter a valid starting location.`,
+        });
+        return;
+      }
+    }
+
+    // Resolve Destination coordinates dynamically if missing or incomplete
+    if (destination.lat == null || destination.lon == null) {
+      const dQuery = typeof destination === 'string' ? destination : destination.name;
+      const dMatches = await searchLocations(dQuery);
+      if (dMatches && dMatches.length > 0) {
+        destination = { lat: dMatches[0].latitude, lon: dMatches[0].longitude, name: dMatches[0].name };
+      } else {
+        res.status(400).json({
+          success: false,
+          message: `Could not find destination "${dQuery}". Please enter a valid destination in the map.`,
+        });
+        return;
+      }
     }
 
     // Fetch live ambient AQI for origin/city

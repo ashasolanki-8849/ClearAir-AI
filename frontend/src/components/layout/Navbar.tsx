@@ -20,6 +20,7 @@ import {
   Settings,
   Shield,
   MessageSquare,
+  Users,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -150,6 +151,12 @@ export const Navbar = ({ onOpenLocationModal }: NavbarProps) => {
                       Dashboard
                     </Link>
                     <Link
+                      to="/community"
+                      className="flex items-center gap-2 rounded-md px-3 py-2 text-xs text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                    >
+                      Community Hub
+                    </Link>
+                    <Link
                       to="/profile"
                       className="flex items-center gap-2 rounded-md px-3 py-2 text-xs text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
                     >
@@ -264,6 +271,14 @@ export const Navbar = ({ onOpenLocationModal }: NavbarProps) => {
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>What To Do</span>
+            </Link>
+            <Link
+              to="/community"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300"
+            >
+              <Users className="w-4 h-4 text-emerald-500" />
+              <span>Community</span>
             </Link>
             <Link
               to="/profile"

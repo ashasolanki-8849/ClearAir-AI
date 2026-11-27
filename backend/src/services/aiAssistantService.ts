@@ -191,13 +191,14 @@ const callGeminiLLM = async (
   const systemPrompt = buildSystemPrompt(context, language);
   const contents = sanitizeContentsForGemini(previousMessages, userMessage);
 
-  // Prioritize modern, high-stability Gemini models on Google AI Studio
+  // Prioritize modern, ultra-low latency & high stability Gemini models on Google AI Studio
   const models = [
     'gemini-3.5-flash-lite',
     'gemini-3.1-flash-lite',
-    'gemini-3.8-flash',
-    'gemini-3.7-flash',
+    'gemini-flash-lite-latest',
     'gemini-flash-latest',
+    'gemini-3.7-flash',
+    'gemini-3.8-flash',
   ];
 
   for (const model of models) {
@@ -212,10 +213,10 @@ const callGeminiLLM = async (
           contents,
           generationConfig: {
             responseMimeType: 'application/json',
-            temperature: 0.3,
+            temperature: 0.35,
           },
         },
-        { timeout: 12000 }
+        { timeout: 8000 }
       );
 
       const rawText = res.data?.candidates?.[0]?.content?.parts?.[0]?.text;

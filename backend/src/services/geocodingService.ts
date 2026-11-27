@@ -34,11 +34,35 @@ export const searchLocations = async (query: string): Promise<GeocodingResult[]>
     return POPULAR_CITIES.slice(0, 6);
   }
 
-  const cleanQuery = query.trim().toLowerCase();
+  const cleanQuery = query.trim();
 
+  // 1. High-accuracy Google Maps Geocoding API if key configured
+  const googleMapsKey = process.env.GOOGLE_MAPS_API_KEY;
+  if (googleMapsKey && googleMapsKey.trim().length > 0) {
+    try {
+      const gUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+        cleanQuery
+      )}&key=${googleMapsKey.trim()}`;
+      const gRes = await axios.get(gUrl, { timeout: 6000 });
+      if (gRes.data && gRes.data.results && gRes.data.results.length > 0) {
+        return gRes.data.results.slice(0, 8).map((r: any, idx: number) => ({
+          id: 10000 + idx,
+          name: r.formatted_address || cleanQuery,
+          latitude: r.geometry.location.lat,
+          longitude: r.geometry.location.lng,
+          country: r.address_components?.find((c: any) => c.types.includes('country'))?.long_name || 'India',
+          admin1: r.address_components?.find((c: any) => c.types.includes('administrative_area_level_1'))?.long_name || '',
+        }));
+      }
+    } catch (gErr: any) {
+      console.warn(`[Geocoding] Google Maps search failed for "${query}": ${gErr.message}`);
+    }
+  }
+
+  // 2. Open-Meteo Geocoding API
   try {
     const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
-      cleanQuery
+      cleanQuery.toLowerCase()
     )}&count=10&language=en&format=json`;
 
     const response = await axios.get(url, { timeout: 5000 });
@@ -54,18 +78,20 @@ export const searchLocations = async (query: string): Promise<GeocodingResult[]>
       }));
     }
   } catch (error: any) {
-    console.warn(`Geocoding search API failed for "${query}": ${error.message}. Using offline matches.`);
+    console.warn(`Geocoding search API failed for "${query}": ${error.message}.`);
   }
 
-  // Fallback to internal match if API fails or yields no results
+  // 3. Fallback to internal match for prominent cities
+  const cleanLower = cleanQuery.toLowerCase();
   const matches = POPULAR_CITIES.filter(
     (c) =>
-      c.name.toLowerCase().includes(cleanQuery) ||
-      (c.admin1 && c.admin1.toLowerCase().includes(cleanQuery)) ||
-      c.country.toLowerCase().includes(cleanQuery)
+      c.name.toLowerCase().includes(cleanLower) ||
+      (c.admin1 && c.admin1.toLowerCase().includes(cleanLower)) ||
+      c.country.toLowerCase().includes(cleanLower)
   );
 
-  return matches.length > 0 ? matches : POPULAR_CITIES.slice(0, 5);
+  // Return real matches only, or empty array if destination is completely invalid
+  return matches;
 };
 
 export interface ReverseGeocodeResult {

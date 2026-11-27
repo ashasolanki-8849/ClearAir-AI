@@ -41,7 +41,7 @@ export const App = () => {
       <Route path="/what-to-do" element={<WhatToDoPage />} />
       <Route path="/family" element={<Navigate to="/what-to-do" replace />} />
       <Route path="/indoor" element={<Navigate to="/what-to-do" replace />} />
-      <Route path="/community" element={<Navigate to="/what-to-do" replace />} />
+      <Route path="/community" element={<CommunityPage />} />
       <Route path="/profile" element={<ProfilePage />} />
 
       {/* Footer Pages */}
