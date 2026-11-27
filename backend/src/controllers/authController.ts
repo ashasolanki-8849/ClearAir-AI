@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { User, IUser } from '../models/User.js';
 import { UserPreferences } from '../models/UserPreferences.js';
 import { AuthenticatedRequest } from '../middleware/authMiddleware.js';
@@ -61,15 +62,47 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Password strength verification: min 8 characters, at least 1 letter and 1 number
-    if (password.length < 8) {
-      res.status(400).json({ success: false, message: 'Password must be at least 8 characters long.' });
+    // Strict enterprise-grade password security:
+    // 1. Length validation (8 - 128 characters)
+    if (password.length < 8 || password.length > 128) {
+      res.status(400).json({ success: false, message: 'Password must be between 8 and 128 characters.' });
       return;
     }
-    const hasLetter = /[a-zA-Z]/.test(password);
+
+    // 2. Character complexity: uppercase, lowercase, digit, and special character
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
     const hasNumber = /\d/.test(password);
-    if (!hasLetter || !hasNumber) {
-      res.status(400).json({ success: false, message: 'Password must contain at least one letter and one number for security.' });
+    const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+    if (!hasUpper || !hasLower || !hasNumber || !hasSpecial) {
+      res.status(400).json({
+        success: false,
+        message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (e.g. !@#$%^&*).',
+      });
+      return;
+    }
+
+    // 3. Block common weak passwords
+    const commonWeakList = [
+      'password123', 'admin1234', '12345678', 'qwerty123', 'clearair123',
+      'welcome123', 'pass12345', 'p@ssword1', 'p@ssw0rd1'
+    ];
+    if (commonWeakList.includes(password.toLowerCase())) {
+      res.status(400).json({
+        success: false,
+        message: 'This password is too easily guessed. Please choose a more secure password.',
+      });
+      return;
+    }
+
+    // 4. Disallow password containing user name or email prefix
+    const emailPrefix = email.split('@')[0]?.toLowerCase();
+    if (emailPrefix && emailPrefix.length >= 3 && password.toLowerCase().includes(emailPrefix)) {
+      res.status(400).json({
+        success: false,
+        message: 'For your security, password cannot contain your email username.',
+      });
       return;
     }
 
@@ -132,6 +165,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
     if (!user) {
+      // Constant-time execution to prevent user enumeration through timing attacks
+      await bcrypt.compare(password, '$2a$12$e8N8w8rL5p9iYvH9YkLq0OG7J7m2F4x8Q2W6e0R1t3Y5u7I9o1p2a');
       res.status(401).json({ success: false, message: 'Invalid email or password.' });
       return;
     }

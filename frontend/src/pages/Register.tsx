@@ -11,6 +11,7 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
+  Check,
 } from 'lucide-react';
 
 export const Register = () => {
@@ -26,6 +27,21 @@ export const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  const hasMinLength = password.length >= 8;
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+  const strengthScore = [hasMinLength, hasUpper, hasLower, hasNumber, hasSpecial].filter(Boolean).length;
+  const getStrengthLabel = () => {
+    if (password.length === 0) return { label: '', color: 'bg-zinc-200 dark:bg-zinc-800' };
+    if (strengthScore <= 2) return { label: 'Weak', color: 'bg-red-500' };
+    if (strengthScore <= 3) return { label: 'Fair', color: 'bg-amber-500' };
+    if (strengthScore === 4) return { label: 'Good', color: 'bg-sky-500' };
+    return { label: 'Very Strong', color: 'bg-emerald-500' };
+  };
+
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -35,13 +51,13 @@ export const Register = () => {
       return;
     }
 
-    if (password.length < 8) {
+    if (!hasMinLength) {
       setError('Password must be at least 8 characters long.');
       return;
     }
 
-    if (!/(?=.*[a-zA-Z])(?=.*[0-9])/.test(password)) {
-      setError('Password must contain at least one letter and one number for high security.');
+    if (!hasUpper || !hasLower || !hasNumber || !hasSpecial) {
+      setError('Password must contain uppercase, lowercase, a number, and a special character (!@#$%^&*).');
       return;
     }
 
@@ -129,18 +145,30 @@ export const Register = () => {
             </div>
 
             <div>
-              <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                Password (minimum 8 characters with letters & numbers)
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-medium text-zinc-700 dark:text-zinc-300">
+                  Secure Password
+                </label>
+                {password.length > 0 && (
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full text-white ${
+                    strengthScore <= 2 ? 'bg-red-500' :
+                    strengthScore <= 3 ? 'bg-amber-500' :
+                    strengthScore === 4 ? 'bg-sky-500' : 'bg-emerald-500'
+                  }`}>
+                    {getStrengthLabel().label}
+                  </span>
+                )}
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-3 w-4 h-4 text-zinc-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   minLength={8}
+                  maxLength={128}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Create a strong password"
                   className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
                 <button
@@ -152,10 +180,50 @@ export const Register = () => {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              <p className="text-[11px] text-zinc-400 mt-1 flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-sky-500 shrink-0" />
-                <span>Must be at least 8 characters and include both letters and numbers.</span>
-              </p>
+
+              {/* Password strength bar */}
+              {password.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  <div className="grid grid-cols-5 gap-1.5 h-1.5">
+                    {[1, 2, 3, 4, 5].map((lvl) => (
+                      <div
+                        key={lvl}
+                        className={`rounded-full transition-colors ${
+                          strengthScore >= lvl
+                            ? strengthScore <= 2
+                              ? 'bg-red-500'
+                              : strengthScore <= 3
+                              ? 'bg-amber-500'
+                              : strengthScore === 4
+                              ? 'bg-sky-500'
+                              : 'bg-emerald-500'
+                            : 'bg-zinc-200 dark:bg-zinc-800'
+                        }`}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Requirements checklist */}
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-zinc-500 dark:text-zinc-400 pt-1">
+                    <span className={`flex items-center gap-1 ${hasMinLength ? 'text-emerald-600 dark:text-emerald-400 font-medium' : ''}`}>
+                      <Check className={`w-3 h-3 ${hasMinLength ? 'text-emerald-500' : 'text-zinc-300 dark:text-zinc-700'}`} />
+                      8+ characters
+                    </span>
+                    <span className={`flex items-center gap-1 ${(hasUpper && hasLower) ? 'text-emerald-600 dark:text-emerald-400 font-medium' : ''}`}>
+                      <Check className={`w-3 h-3 ${(hasUpper && hasLower) ? 'text-emerald-500' : 'text-zinc-300 dark:text-zinc-700'}`} />
+                      Upper & lowercase
+                    </span>
+                    <span className={`flex items-center gap-1 ${hasNumber ? 'text-emerald-600 dark:text-emerald-400 font-medium' : ''}`}>
+                      <Check className={`w-3 h-3 ${hasNumber ? 'text-emerald-500' : 'text-zinc-300 dark:text-zinc-700'}`} />
+                      Number (0-9)
+                    </span>
+                    <span className={`flex items-center gap-1 ${hasSpecial ? 'text-emerald-600 dark:text-emerald-400 font-medium' : ''}`}>
+                      <Check className={`w-3 h-3 ${hasSpecial ? 'text-emerald-500' : 'text-zinc-300 dark:text-zinc-700'}`} />
+                      Special (!@#$)
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
