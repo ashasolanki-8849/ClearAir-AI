@@ -50,7 +50,7 @@ router.get('/local-solutions', getLocalSolutions);
 
 // AI Sustainable Lifestyle Advisor
 router.post('/assistant/chat', optionalAuth, chatWithAdvisor);
-router.get('/assistant/history', optionalAuth, (req, res) => {
+router.get('/assistant/history', optionalAuth, (req: any, res: any) => {
   res.status(200).json({ success: true, history: [] });
 });
 

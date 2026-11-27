@@ -24,7 +24,7 @@ export const connectDB = async (): Promise<void> => {
       console.log(' Connecting to MongoDB Atlas / configured URI...');
       const conn = await mongoose.connect(mongoUri, {
         serverSelectionTimeoutMS: 5000,
-      });
+      } as any);
       isConnected = true;
       console.log(` MongoDB Connected: ${conn.connection.host} (${conn.connection.name})`);
       return;
@@ -34,9 +34,11 @@ export const connectDB = async (): Promise<void> => {
     }
   }
 
-  // Graceful fallback to mongodb-memory-server
+  // Graceful fallback to mongodb-memory-server for local dev
   try {
-    const { MongoMemoryServer } = await import('mongodb-memory-server');
+    const memModule = 'mongodb-memory-server';
+    const memoryServerPkg: any = await import(memModule);
+    const MongoMemoryServer = memoryServerPkg.MongoMemoryServer;
     memoryServerInstance = await MongoMemoryServer.create();
     const uri = memoryServerInstance.getUri();
     const conn = await mongoose.connect(uri);

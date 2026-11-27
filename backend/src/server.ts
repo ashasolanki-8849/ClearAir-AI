@@ -30,7 +30,7 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(
   cors({
-    origin: (origin, callback) => {
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
       // Dynamic origin reflection allows Vercel frontend, custom domains, and local development
       callback(null, true);
     },
@@ -42,7 +42,7 @@ app.use(
 app.use(express.json());
 
 // Request logger for API calls
-app.use((req, _res, next) => {
+app.use((req: express.Request, _res: express.Response, next: express.NextFunction) => {
   if (!req.path.startsWith('/health')) {
     console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.path}`);
   }
@@ -50,7 +50,7 @@ app.use((req, _res, next) => {
 });
 
 // Root & Health check routes for Render monitoring
-app.get('/', (_req, res) => {
+app.get('/', (_req: express.Request, res: express.Response) => {
   res.status(200).json({
     status: 'online',
     service: 'ClearAir AI Backend Server',
@@ -59,7 +59,7 @@ app.get('/', (_req, res) => {
   });
 });
 
-app.get('/api/health', (_req, res) => {
+app.get('/api/health', (_req: express.Request, res: express.Response) => {
   res.status(200).json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
