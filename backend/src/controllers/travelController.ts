@@ -106,10 +106,23 @@ export const searchRoutes = async (req: AuthenticatedRequest, res: Response): Pr
           ? 'arterial_fastest'
           : r.routeTag === 'cleanest_corridor'
           ? 'clean_bypass'
+          : r.routeTag === 'transit_bus'
+          ? 'transit_bus'
+          : r.routeTag === 'two_wheeler'
+          ? 'two_wheeler'
           : 'metro_transit';
 
       const streetAqi = Math.round(
-        outdoorAqi * (routeType === 'clean_bypass' ? 0.72 : routeType === 'metro_transit' ? 0.45 : 1.25)
+        outdoorAqi *
+          (routeType === 'clean_bypass'
+            ? 0.72
+            : routeType === 'metro_transit'
+            ? 0.45
+            : routeType === 'transit_bus'
+            ? 0.65
+            : routeType === 'two_wheeler'
+            ? 1.35
+            : 1.25)
       );
 
       const speedScore = Math.max(30, Math.min(100, Math.round(100 - (r.durationMinutes - 20) * 1.5)));
@@ -155,11 +168,28 @@ export const searchRoutes = async (req: AuthenticatedRequest, res: Response): Pr
           exposureScore: Math.round(streetAqi / 5),
           riskLevel: exposureRiskLevel,
           doseIndex: Math.round(streetAqi * (r.durationMinutes / 60)),
-          modeMultiplier: routeType === 'clean_bypass' ? 0.65 : routeType === 'metro_transit' ? 0.35 : 1.2,
-          openAirExposure: routeType === 'arterial_fastest' && r.mode === 'two_wheeler',
-          cabinRecirculationRecommended: true,
-          maskRecommendation: streetAqi > 200 ? 'N95 / FFP2 respirator recommended' : 'Standard surgical mask',
-          vulnerableGroupWarning: streetAqi > 250 ? 'Severe particulate density: asthmatics and elderly should avoid open-air transit' : undefined,
+          modeMultiplier:
+            routeType === 'clean_bypass'
+              ? 0.65
+              : routeType === 'metro_transit'
+              ? 0.35
+              : routeType === 'transit_bus'
+              ? 0.7
+              : routeType === 'two_wheeler'
+              ? 1.4
+              : 1.2,
+          openAirExposure: routeType === 'two_wheeler',
+          cabinRecirculationRecommended: r.mode === 'car',
+          maskRecommendation:
+            routeType === 'two_wheeler'
+              ? 'N95 / FFP2 respirator strongly advised'
+              : streetAqi > 200
+              ? 'N95 / FFP2 respirator recommended'
+              : 'Standard surgical mask',
+          vulnerableGroupWarning:
+            streetAqi > 250
+              ? 'Severe particulate density: asthmatics and elderly should avoid open-air transit'
+              : undefined,
         },
         isRecommended,
         recommendationReason: isRecommended ? ranking.recommendationReason : `Viable alternative: ${r.routeName}`,
@@ -167,9 +197,29 @@ export const searchRoutes = async (req: AuthenticatedRequest, res: Response): Pr
       };
     });
 
+    const firstRoute = formattedRoutes[0] || { distanceKm: 15, durationMinutes: 30 };
+    const geminiPlan =
+      (await generateGeminiTravelPlan(
+        origin.name,
+        destination.name,
+        outdoorAqi,
+        firstRoute.distanceKm,
+        firstRoute.durationMinutes
+      )) ||
+      generateFallbackTravelPlan(
+        origin.name,
+        destination.name,
+        outdoorAqi,
+        firstRoute.distanceKm,
+        firstRoute.durationMinutes
+      );
+
     res.status(200).json({
       success: true,
+      origin,
+      destination,
       routes: formattedRoutes,
+      geminiPlan,
       recommendedRoute: formattedRoutes.find((r) => r.isRecommended) || formattedRoutes[0],
       recommendationReason: ranking.recommendationReason,
       rankedRouteIds: ranking.rankedRouteIds,
@@ -187,6 +237,107 @@ export const searchRoutes = async (req: AuthenticatedRequest, res: Response): Pr
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }
+};
+
+// Helpers: AI Travel Plan Generation powered by Gemini & Map models
+const generateGeminiTravelPlan = async (
+  originName: string,
+  destinationName: string,
+  outdoorAqi: number,
+  distanceKm: number,
+  durationMinutes: number
+) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+
+  const models = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-flash-lite-latest'];
+  const prompt = `You are ClearAir AI's Expert Smart Travel & Navigation Co-Pilot.
+Generate an optimal, personalized journey plan:
+- Origin: ${originName}
+- Destination: ${destinationName}
+- Distance: ~${distanceKm} km
+- Estimated Time: ~${durationMinutes} mins
+- Ambient Air Quality (AQI): ${outdoorAqi}
+
+Compare transit options (Car, Bus, Metro, Two-Wheeler) and provide optimal departure timing:
+Return strictly valid JSON with this schema:
+{
+  "bestMode": "Car | Bus | Metro | Two-Wheeler",
+  "planSummary": "Clear 2-sentence summary of the recommended route and travel strategy",
+  "optimalDepartureTime": "e.g. After 9:30 AM to avoid the morning 8:00-9:30 AM vehicular smog peak",
+  "modesAnalysis": {
+    "car": { "recommended": boolean, "tip": "Turn car AC to internal recirculation mode to block 80% exhaust", "estimatedDuration": "${durationMinutes} mins" },
+    "bus": { "recommended": boolean, "tip": "Prefer AC electric buses; avoid sitting next to open windows in gridlock", "estimatedDuration": "${Math.round(durationMinutes * 1.3)} mins" },
+    "metro": { "recommended": boolean, "tip": "Sealed air-conditioned train cabins offer cleanest breathing air and zero traffic", "estimatedDuration": "${Math.round(distanceKm * 2.3 + 8)} mins" },
+    "twoWheeler": { "recommended": boolean, "tip": "Direct exposure to diesel particulates; wear a certified N95 mask with a tight nose clip", "estimatedDuration": "${Math.round(durationMinutes * 0.9)} mins" }
+  },
+  "safetyPrecautions": ["Precaution 1", "Precaution 2", "Precaution 3"],
+  "trafficSmogHotspots": "Key junctions along this route where vehicle idling increases soot"
+}`;
+
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const res = await axios.post(
+        url,
+        {
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.3 },
+        },
+        { timeout: 7000 }
+      );
+      const rawText = res.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (rawText) {
+        return JSON.parse(rawText.replace(/```json/g, '').replace(/```/g, '').trim());
+      }
+    } catch (e: any) {
+      continue;
+    }
+  }
+  return null;
+};
+
+const generateFallbackTravelPlan = (
+  originName: string,
+  destinationName: string,
+  outdoorAqi: number,
+  distanceKm: number,
+  durationMinutes: number
+) => {
+  const isSevere = outdoorAqi >= 250;
+  return {
+    bestMode: isSevere ? 'Metro / Sealed Transit' : 'Car with AC Recirculation',
+    planSummary: `Travel from ${originName} to ${destinationName} covers ~${distanceKm} km. ${isSevere ? 'Severe smog detected: prefer sealed electric metro or AC vehicles.' : 'Air quality is moderate: travel during mid-day for best air dispersion.'}`,
+    optimalDepartureTime: 'After 10:00 AM (avoids early morning cold air inversion and heavy traffic exhaust)',
+    modesAnalysis: {
+      car: {
+        recommended: true,
+        tip: 'Keep AC on internal recirculation mode; do not draw in outside air in traffic jams.',
+        estimatedDuration: `${durationMinutes} mins`,
+      },
+      bus: {
+        recommended: !isSevere,
+        tip: 'Prefer AC electric city buses over open non-AC buses during rush hours.',
+        estimatedDuration: `${Math.round(durationMinutes * 1.3)} mins`,
+      },
+      metro: {
+        recommended: true,
+        tip: 'Sealed underground and elevated trains shield passengers from 85% of road-level toxic soot.',
+        estimatedDuration: `${Math.round(distanceKm * 2.3 + 8)} mins`,
+      },
+      twoWheeler: {
+        recommended: false,
+        tip: 'Direct exposure to tailpipe soot. If using bike/scooter, a sealed N95 mask is mandatory.',
+        estimatedDuration: `${Math.round(durationMinutes * 0.9)} mins`,
+      },
+    },
+    safetyPrecautions: [
+      'Wear an N95 respirator if riding two-wheelers or waiting at open bus stands',
+      'Seal vehicle windows and enable AC internal circulation mode',
+      'Hydrate with water or warm tea immediately after arriving at your destination',
+    ],
+    trafficSmogHotspots: 'Highway toll plazas, main ring road intersections, and multi-lane bottleneck signals.',
+  };
 };
 
 export const compareRoutes = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -685,7 +836,7 @@ Respond strictly in valid JSON matching this schema:
   "departureTimeTip": "string"
 }`;
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`;
         const response = await axios.post(
           url,
           {

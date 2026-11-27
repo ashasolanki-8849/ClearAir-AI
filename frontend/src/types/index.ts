@@ -603,7 +603,7 @@ export interface RouteEmissionData {
 export interface RouteAlternativeData {
   routeId: string;
   routeName: string;
-  routeType: 'arterial_fastest' | 'clean_bypass' | 'metro_transit';
+  routeType: 'arterial_fastest' | 'clean_bypass' | 'metro_transit' | 'transit_bus' | 'two_wheeler' | string;
   mode: string;
   distanceKm: number;
   durationMinutes: number;

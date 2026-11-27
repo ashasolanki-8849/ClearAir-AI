@@ -123,11 +123,17 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
       // - Arterial / Fastest: High smog road (Amber / Orange)
       // - Clean Bypass: Low pollution green corridor (Emerald Green)
       // - Metro Transit: Mass transit rail line (Sky Blue)
+      // - City Bus: Public transit (Violet / Purple)
+      // - Two-Wheeler: Direct open exposure (Pink / Rose)
       let color = '#f59e0b';
       if (route.routeType === 'clean_bypass') {
         color = '#10b981';
       } else if (route.routeType === 'metro_transit') {
         color = '#0284c7';
+      } else if (route.routeType === 'transit_bus' || route.mode === 'bus') {
+        color = '#8b5cf6';
+      } else if (route.routeType === 'two_wheeler' || route.mode === 'two_wheeler') {
+        color = '#ec4899';
       }
 
       if (route.geometry && route.geometry.length > 0) {
@@ -135,7 +141,7 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
           color: color,
           weight: isSelected ? 7 : 4,
           opacity: isSelected ? 0.95 : 0.45,
-          dashArray: route.routeType === 'metro_transit' ? '8, 6' : undefined,
+          dashArray: route.routeType === 'metro_transit' ? '8, 6' : route.routeType === 'transit_bus' ? '6, 6' : undefined,
           lineJoin: 'round',
         });
 
@@ -179,10 +185,19 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
         {routes.map((r) => {
           const isSelected = r.routeId === selectedRouteId;
           let badgeColor = 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-800';
+          let dotColor = '#f59e0b';
           if (r.routeType === 'clean_bypass') {
             badgeColor = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800';
+            dotColor = '#10b981';
           } else if (r.routeType === 'metro_transit') {
             badgeColor = 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-300 dark:border-sky-800';
+            dotColor = '#0284c7';
+          } else if (r.routeType === 'transit_bus' || r.mode === 'bus') {
+            badgeColor = 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-300 dark:border-purple-800';
+            dotColor = '#8b5cf6';
+          } else if (r.routeType === 'two_wheeler' || r.mode === 'two_wheeler') {
+            badgeColor = 'bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-300 dark:border-pink-800';
+            dotColor = '#ec4899';
           }
 
           return (
@@ -191,20 +206,13 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
               onClick={() => onSelectRoute(r.routeId)}
               className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition-all flex items-center gap-1.5 ${
                 isSelected
-                  ? `${badgeColor} ring-2 ring-emerald-500 dark:ring-emerald-400 shadow-sm font-semibold`
+                  ? `${badgeColor} ring-2 ring-sky-500 dark:ring-sky-400 shadow-sm font-semibold`
                   : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'
               }`}
             >
               <span
                 className="w-2 h-2 rounded-full"
-                style={{
-                  backgroundColor:
-                    r.routeType === 'clean_bypass'
-                      ? '#10b981'
-                      : r.routeType === 'metro_transit'
-                      ? '#0284c7'
-                      : '#f59e0b',
-                }}
+                style={{ backgroundColor: dotColor }}
               />
               <span>{r.routeName}</span>
               <span className="text-[10px] opacity-75">({r.durationMinutes}m)</span>
@@ -217,15 +225,23 @@ export const InteractiveRouteMap: React.FC<InteractiveRouteMapProps> = ({
       <div className="absolute bottom-3 right-3 z-[1000] bg-white/90 dark:bg-black/90 backdrop-blur-md px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-md text-xs text-zinc-600 dark:text-zinc-400 space-y-1">
         <div className="flex items-center gap-2">
           <span className="w-3.5 h-1 bg-amber-500 rounded-full" />
-          <span>Fastest Arterial (High Smog)</span>
+          <span>Car / Highway</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-3.5 h-1 bg-emerald-500 rounded-full" />
-          <span>Clean Air Bypass (Low Exposure)</span>
+          <span>Clean Bypass</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-3.5 h-1 border-t-2 border-dashed border-sky-500" />
-          <span>Metro Rail Transit (Eco)</span>
+          <span>Metro Rail</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3.5 h-1 border-t-2 border-dashed border-purple-500" />
+          <span>City Bus</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3.5 h-1 bg-pink-500 rounded-full" />
+          <span>Two-Wheeler</span>
         </div>
       </div>
 

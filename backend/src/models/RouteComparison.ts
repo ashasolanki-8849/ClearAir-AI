@@ -4,7 +4,7 @@ import { TransportMode } from './SavedRoute.js';
 export interface IRouteAlternative {
   routeId: string;
   routeName: string;
-  routeTag: 'fastest' | 'cleanest_corridor' | 'transit_eco' | 'balanced';
+  routeTag: 'fastest' | 'cleanest_corridor' | 'transit_eco' | 'balanced' | 'transit_bus' | 'two_wheeler';
   mode: TransportMode;
   distanceKm: number;
   durationMinutes: number;

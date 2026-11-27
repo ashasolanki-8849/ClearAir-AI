@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Wind, Lock, Mail, ArrowRight, AlertCircle, Eye, EyeOff, ShieldAlert } from 'lucide-react';
+import { useAQI } from '../context/AQIContext';
+import { Wind, Lock, Mail, ArrowRight, AlertCircle, Eye, EyeOff, ShieldAlert, MapPin } from 'lucide-react';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -11,6 +12,7 @@ export const Login = () => {
   const [error, setError] = useState<string | null>(null);
 
   const { login } = useAuth();
+  const { detectUserLocation } = useAQI();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,6 +27,14 @@ export const Login = () => {
     setLoading(true);
     try {
       await login(email.trim(), password);
+      
+      // Proactively prompt and detect user location on login for real-time air safety
+      try {
+        await detectUserLocation();
+      } catch (locErr) {
+        // Continue smoothly if location is dismissed
+      }
+
       navigate('/dashboard');
     } catch (err: any) {
       const msg = err.message || 'Login failed. Please verify your email and password.';

@@ -52,8 +52,11 @@ export const generateRouteAlternatives = async (
       osrmDistanceKm = Math.round((r.distance / 1000) * 10) / 10;
       osrmDurationMins = Math.max(5, Math.round(r.duration / 60));
       // Convert GeoJSON [lon, lat] to Leaflet [lat, lon]
-      if (Array.isArray(r.geometry?.coordinates)) {
+      if (Array.isArray(r.geometry?.coordinates) && r.geometry.coordinates.length > 1) {
         realGeometry = r.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+        // Ensure start and end strictly anchor to origin and destination markers
+        realGeometry[0] = [origin.lat, origin.lon];
+        realGeometry[realGeometry.length - 1] = [destination.lat, destination.lon];
       }
     }
   } catch (e) {
@@ -65,8 +68,8 @@ export const generateRouteAlternatives = async (
     realGeometry = generateInterpolatedPath(
       [origin.lat, origin.lon],
       [destination.lat, destination.lon],
-      12,
-      0.002
+      14,
+      0.003
     );
   }
 
@@ -74,16 +77,30 @@ export const generateRouteAlternatives = async (
   const bypassGeometry = generateInterpolatedPath(
     [origin.lat, origin.lon],
     [destination.lat, destination.lon],
-    14,
-    0.008 // wider detour avoiding main highway
+    16,
+    0.012 // wider detour avoiding main highway
   );
 
-  // Generate Transit Corridor Geometry (metro line with stations)
+  // Generate Transit Corridor Geometry (bus & metro line)
+  const busGeometry = generateInterpolatedPath(
+    [origin.lat, origin.lon],
+    [destination.lat, destination.lon],
+    14,
+    -0.005 // arterial bus lane
+  );
+
   const transitGeometry = generateInterpolatedPath(
     [origin.lat, origin.lon],
     [destination.lat, destination.lon],
-    10,
-    -0.004 // dedicated rail alignment
+    12,
+    -0.008 // dedicated rail alignment
+  );
+
+  const bikeGeometry = generateInterpolatedPath(
+    [origin.lat, origin.lon],
+    [destination.lat, destination.lon],
+    14,
+    0.002
   );
 
   // ==========================================
@@ -185,7 +202,65 @@ export const generateRouteAlternatives = async (
     geometryCoordinates: transitGeometry,
   };
 
-  return [route1, route2, route3];
+  // ==========================================
+  // ROUTE 4: PUBLIC BUS TRANSIT (AC / Electric Bus)
+  // ==========================================
+  const distR4 = Math.round((osrmDistanceKm * 1.08) * 10) / 10;
+  const durR4 = Math.round(osrmDurationMins * 1.35 + 5);
+  const emissR4 = calculateTravelEmissions({ distanceKm: distR4, mode: 'public_bus', passengerCount: 1 });
+  const exposR4 = evaluateTravelExposure({
+    outdoorAqi,
+    pm25,
+    mode: 'public_bus',
+    durationMinutes: durR4,
+    trafficStatus: 'moderate',
+    roadType: 'arterial_highway',
+  });
+
+  const route4: IRouteAlternative = {
+    routeId: 'route_bus_4',
+    routeName: 'City Bus Public Transit (AC / Electric)',
+    routeTag: 'transit_bus',
+    mode: 'bus',
+    distanceKm: distR4,
+    durationMinutes: durR4,
+    trafficStatus: 'moderate',
+    estimatedEmissionsGrams: emissR4.perPassengerEmissionsGrams || 180,
+    estimatedCostInr: Math.min(35, Math.max(10, Math.round(distR4 * 2))),
+    exposureLevel: exposR4.exposureLevel,
+    exposureExplanation:
+      'AC city buses reduce direct exhaust inhalation by 60% compared to open road traffic. Prefer travel during non-peak hours.',
+    advantages: ['Economical public transit fare', 'Lower individual carbon footprint', 'Regular urban connections'],
+    disadvantages: ['Scheduled station stops increase total journey duration'],
+    geometryCoordinates: busGeometry,
+  };
+
+  // ==========================================
+  // ROUTE 5: TWO-WHEELER / BIKE
+  // ==========================================
+  const distR5 = distR1;
+  const durR5 = Math.max(5, Math.round(osrmDurationMins * 0.9));
+  const emissR5 = calculateTravelEmissions({ distanceKm: distR5, mode: 'two_wheeler', passengerCount: 1 });
+
+  const route5: IRouteAlternative = {
+    routeId: 'route_bike_5',
+    routeName: 'Two-Wheeler / Scooter Road Transit',
+    routeTag: 'two_wheeler',
+    mode: 'two_wheeler',
+    distanceKm: distR5,
+    durationMinutes: durR5,
+    trafficStatus: 'moderate',
+    estimatedEmissionsGrams: emissR5.perPassengerEmissionsGrams || 290,
+    estimatedCostInr: Math.round(distR5 * 3.5),
+    exposureLevel: 'high',
+    exposureExplanation:
+      'Direct, unshielded exposure to vehicular diesel particulate matter and exhaust plumes. Tight-fitting N95 mask is strongly advised.',
+    advantages: ['Faster maneuverability in dense traffic', 'Low fuel expense'],
+    disadvantages: ['Highest personal respiratory exposure', 'Direct exposure to street-level soot and dust'],
+    geometryCoordinates: bikeGeometry,
+  };
+
+  return [route1, route2, route3, route4, route5];
 };
 
 // Helper: Generates realistic curved road coordinates between points
@@ -196,7 +271,8 @@ const generateInterpolatedPath = (
   curvatureOffset: number
 ): [number, number][] => {
   const points: [number, number][] = [];
-  for (let i = 0; i <= steps; i++) {
+  points.push([start[0], start[1]]);
+  for (let i = 1; i < steps; i++) {
     const t = i / steps;
     // Linear interpolation
     const lat = start[0] + (end[0] - start[0]) * t;
@@ -209,5 +285,6 @@ const generateInterpolatedPath = (
       Math.round((lon - arc) * 100000) / 100000,
     ]);
   }
+  points.push([end[0], end[1]]);
   return points;
 };
